@@ -6,7 +6,18 @@ import '../../core/models/models.dart';
 /// por implementações mock (`mock_repositories.dart`) e, no futuro, por um
 /// client HTTP da API NestJS.
 abstract interface class AuthRepository {
+  /// Login de demonstração por papel (modo mock / botões demo).
   Future<Usuario> login(PerfilUsuario perfil);
+
+  /// Login real com credenciais; o papel vem do perfil persistido.
+  Future<Usuario> entrarComEmailSenha(String email, String senha);
+
+  /// Usuário da sessão persistida, ou null se não houver/expirou.
+  Future<Usuario?> usuarioAtual();
+
+  Future<void> sair();
+
+  Future<void> recuperarSenha(String email);
 }
 
 abstract interface class AlunoRepository {
@@ -53,6 +64,10 @@ abstract interface class AgendaRepository {
 
 abstract interface class ChatRepository {
   Future<List<Mensagem>> conversa(String alunoId);
+
+  /// Mensagens chegando em tempo real (Realtime no Supabase;
+  /// stream vazio no mock).
+  Stream<Mensagem> novasMensagens(String alunoId);
   Future<Mensagem> enviar({
     required String alunoId,
     required bool doAluno,

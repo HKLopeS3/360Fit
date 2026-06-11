@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/config/app_config.dart';
@@ -27,25 +29,55 @@ Future<String> _resolveAlunoId(String alunoId) async {
 
 class SupabaseAuthRepository implements AuthRepository {
   /// Usuários do seed de demonstração (supabase/seed.sql).
-  static const _emailsDemo = {
+  static const emailsDemo = {
     PerfilUsuario.aluno: 'carlos.mendes@email.com',
     PerfilUsuario.personal: 'joao.silva@360fit.com.br',
   };
 
   @override
-  Future<Usuario> login(PerfilUsuario perfil) async {
+  Future<Usuario> login(PerfilUsuario perfil) =>
+      entrarComEmailSenha(emailsDemo[perfil]!, AppConfig.demoSenha);
+
+  @override
+  Future<Usuario> entrarComEmailSenha(String email, String senha) async {
     final resposta = await _db.auth.signInWithPassword(
-      email: _emailsDemo[perfil]!,
-      password: AppConfig.demoSenha,
+      email: email.trim(),
+      password: senha,
     );
-    final user = resposta.user!;
+    return _usuarioDoPerfil(resposta.user!.id);
+  }
+
+  @override
+  Future<Usuario?> usuarioAtual() async {
+    final sessao = _db.auth.currentSession;
+    if (sessao == null) return null;
+    try {
+      return await _usuarioDoPerfil(sessao.user.id);
+    } catch (_) {
+      // Sessão inválida/expirada: limpa e exige novo login.
+      await _db.auth.signOut();
+      return null;
+    }
+  }
+
+  @override
+  Future<void> sair() => _db.auth.signOut();
+
+  @override
+  Future<void> recuperarSenha(String email) =>
+      _db.auth.resetPasswordForEmail(email.trim());
+
+  Future<Usuario> _usuarioDoPerfil(String userId) async {
     final dados =
-        await _db.from('perfis').select().eq('id', user.id).single();
+        await _db.from('perfis').select().eq('id', userId).single();
+    final papel = dados['papel'] as String;
     return Usuario(
-      id: user.id,
+      id: userId,
       nome: dados['nome'] as String,
       email: dados['email'] as String,
-      perfil: perfil,
+      // admin_empresa usa a visão do profissional até o painel admin existir.
+      perfil:
+          papel == 'aluno' ? PerfilUsuario.aluno : PerfilUsuario.personal,
     );
   }
 }
@@ -352,6 +384,47 @@ class SupabaseAgendaRepository implements AgendaRepository {
 }
 
 class SupabaseChatRepository implements ChatRepository {
+  @override
+  Stream<Mensagem> novasMensagens(String alunoId) {
+    final controller = StreamController<Mensagem>();
+    RealtimeChannel? canal;
+
+    Future<void> assinar() async {
+      final id = await _resolveAlunoId(alunoId);
+      final souAluno = await _souAluno();
+      final eu = _db.auth.currentUser!.id;
+      canal = _db.channel('mensagens-$id')
+        ..onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'mensagens',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'aluno_id',
+            value: id,
+          ),
+          callback: (payload) {
+            final l = payload.newRecord;
+            if (controller.isClosed) return;
+            controller.add(_mapear(
+              l,
+              autorEhAluno: souAluno
+                  ? l['autor_perfil_id'] == eu
+                  : l['autor_perfil_id'] != eu,
+            ));
+          },
+        )
+        ..subscribe();
+    }
+
+    controller
+      ..onListen = assinar
+      ..onCancel = () {
+        if (canal != null) _db.removeChannel(canal!);
+      };
+    return controller.stream;
+  }
+
   @override
   Future<List<Mensagem>> conversa(String alunoId) async {
     final id = await _resolveAlunoId(alunoId);

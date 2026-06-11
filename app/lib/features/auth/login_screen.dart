@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthException;
 
 import '../../app/theme/brand_theme.dart';
+import '../../core/config/app_config.dart';
 import '../../core/config/contato.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
@@ -74,6 +76,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: theme.colorScheme.onSurfaceVariant),
                       ),
                       const SizedBox(height: 32),
+                      if (AppConfig.usarSupabase)
+                        const LoginEmailSenhaForm()
+                      else ...[
                       Text(
                         'Ambiente de demonstração — escolha um perfil:',
                         textAlign: TextAlign.center,
@@ -115,6 +120,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
+                      ],
                     ],
                   ),
                 ),
@@ -126,6 +132,211 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Formulário de autenticação real (modo Supabase).
+class LoginEmailSenhaForm extends ConsumerStatefulWidget {
+  const LoginEmailSenhaForm({super.key});
+
+  @override
+  ConsumerState<LoginEmailSenhaForm> createState() =>
+      _LoginEmailSenhaFormState();
+}
+
+class _LoginEmailSenhaFormState extends ConsumerState<LoginEmailSenhaForm> {
+  final _form = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  final _senha = TextEditingController();
+  bool _ocultarSenha = true;
+  bool _entrando = false;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _senha.dispose();
+    super.dispose();
+  }
+
+  String _mensagemErro(Object e) {
+    if (e is AuthException) {
+      if (e.code == 'invalid_credentials' || e.statusCode == '400') {
+        return 'Email ou senha incorretos.';
+      }
+      if (e.code == 'email_not_confirmed') {
+        return 'Confirme seu email antes de entrar.';
+      }
+      return 'Não foi possível entrar agora. Tente novamente.';
+    }
+    return 'Falha de conexão. Verifique sua internet e tente novamente.';
+  }
+
+  Future<void> _entrar() async {
+    if (!_form.currentState!.validate()) return;
+    setState(() => _entrando = true);
+    try {
+      final usuario = await ref
+          .read(sessaoProvider.notifier)
+          .entrarComEmailSenha(_email.text, _senha.text);
+      if (!mounted) return;
+      context.go(usuario.perfil == PerfilUsuario.aluno
+          ? '/aluno/hoje'
+          : '/personal/dashboard');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _entrando = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_mensagemErro(e))),
+      );
+    }
+  }
+
+  Future<void> _esqueciSenha() async {
+    final controller = TextEditingController(text: _email.text);
+    final email = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Recuperar senha'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Email cadastrado',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Enviar link'),
+          ),
+        ],
+      ),
+    );
+    if (email == null || email.isEmpty || !mounted) return;
+    try {
+      await ref.read(authRepositoryProvider).recuperarSenha(email);
+    } catch (_) {
+      // Não revelamos se o email existe — mensagem única abaixo.
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+            'Se $email estiver cadastrado, você receberá o link de '
+            'recuperação em instantes.'),
+      ),
+    );
+  }
+
+  void _preencherDemo(PerfilUsuario perfil) {
+    _email.text = perfil == PerfilUsuario.aluno
+        ? 'carlos.mendes@email.com'
+        : 'joao.silva@360fit.com.br';
+    _senha.text = AppConfig.demoSenha;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Form(
+      key: _form,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: _email,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.username],
+            decoration: const InputDecoration(
+              labelText: 'Email',
+              prefixIcon: Icon(Icons.alternate_email),
+              border: OutlineInputBorder(),
+            ),
+            validator: (v) {
+              final email = v?.trim() ?? '';
+              if (email.isEmpty) return 'Informe seu email';
+              if (!email.contains('@') || !email.contains('.')) {
+                return 'Email inválido';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _senha,
+            obscureText: _ocultarSenha,
+            autofillHints: const [AutofillHints.password],
+            onFieldSubmitted: (_) => _entrar(),
+            decoration: InputDecoration(
+              labelText: 'Senha',
+              prefixIcon: const Icon(Icons.lock_outline),
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                tooltip: _ocultarSenha ? 'Mostrar senha' : 'Ocultar senha',
+                icon: Icon(_ocultarSenha
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined),
+                onPressed: () =>
+                    setState(() => _ocultarSenha = !_ocultarSenha),
+              ),
+            ),
+            validator: (v) =>
+                (v == null || v.isEmpty) ? 'Informe sua senha' : null,
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: _esqueciSenha,
+              child: const Text('Esqueci minha senha'),
+            ),
+          ),
+          FilledButton.icon(
+            onPressed: _entrando ? null : _entrar,
+            icon: _entrando
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.login),
+            label: const Text('Entrar'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Contas de demonstração:',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            children: [
+              ActionChip(
+                avatar: const Icon(Icons.person, size: 18),
+                label: const Text('Demo aluno'),
+                onPressed: () => _preencherDemo(PerfilUsuario.aluno),
+              ),
+              ActionChip(
+                avatar: const Icon(Icons.assignment_ind, size: 18),
+                label: const Text('Demo personal'),
+                onPressed: () => _preencherDemo(PerfilUsuario.personal),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

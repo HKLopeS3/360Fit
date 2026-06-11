@@ -123,9 +123,9 @@ class MaisScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () {
-                ref.read(sessaoProvider.notifier).sair();
-                context.go('/login');
+              onPressed: () async {
+                await ref.read(sessaoProvider.notifier).sair();
+                if (context.mounted) context.go('/login');
               },
               icon: const Icon(Icons.logout),
               label: const Text('Sair da conta'),
@@ -179,8 +179,8 @@ class MaisScreen extends ConsumerWidget {
             'Solicitação registrada. Você receberá a confirmação por email.'),
       ),
     );
-    ref.read(sessaoProvider.notifier).sair();
-    context.go('/login');
+    await ref.read(sessaoProvider.notifier).sair();
+    if (context.mounted) context.go('/login');
   }
 }
 

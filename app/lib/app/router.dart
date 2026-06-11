@@ -15,8 +15,12 @@ import '../features/personal/dashboard_screen.dart';
 import '../features/personal/personal_shell.dart';
 import '../features/personal/prescricao_screen.dart';
 
-final router = GoRouter(
-  initialLocation: '/login',
+/// Router global; o boot pode recriá-lo apontando direto para a home do
+/// papel quando há sessão persistida (ver main.dart).
+GoRouter router = criarRouter();
+
+GoRouter criarRouter({String initialLocation = '/login'}) => GoRouter(
+  initialLocation: initialLocation,
   routes: [
     GoRoute(
       path: '/login',

@@ -13,6 +13,24 @@ class MockAuthRepository implements AuthRepository {
   Future<Usuario> login(PerfilUsuario perfil) => _simulaRede(
         perfil == PerfilUsuario.aluno ? _db.usuarioAluno : _db.usuarioPersonal,
       );
+
+  @override
+  Future<Usuario> entrarComEmailSenha(String email, String senha) {
+    final normalizado = email.trim().toLowerCase();
+    if (normalizado == _db.usuarioPersonal.email) {
+      return _simulaRede(_db.usuarioPersonal);
+    }
+    return _simulaRede(_db.usuarioAluno);
+  }
+
+  @override
+  Future<Usuario?> usuarioAtual() => _simulaRede(null);
+
+  @override
+  Future<void> sair() => _simulaRede(null);
+
+  @override
+  Future<void> recuperarSenha(String email) => _simulaRede(null);
 }
 
 class MockAlunoRepository implements AlunoRepository {
@@ -140,6 +158,9 @@ class MockAgendaRepository implements AgendaRepository {
 
 class MockChatRepository implements ChatRepository {
   final _db = MockDatabase.instance;
+
+  @override
+  Stream<Mensagem> novasMensagens(String alunoId) => const Stream.empty();
 
   @override
   Future<List<Mensagem>> conversa(String alunoId) => _simulaRede(

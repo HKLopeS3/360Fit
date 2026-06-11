@@ -32,8 +32,13 @@ final evolucaoRepositoryProvider = Provider<EvolucaoRepository>((ref) =>
 // -------------------------------------------------------------------- sessão
 
 class SessaoNotifier extends Notifier<Usuario?> {
+  SessaoNotifier([this._inicial]);
+
+  /// Sessão restaurada antes do runApp (boot com Supabase).
+  final Usuario? _inicial;
+
   @override
-  Usuario? build() => null;
+  Usuario? build() => _inicial;
 
   Future<Usuario> entrar(PerfilUsuario perfil) async {
     final usuario = await ref.read(authRepositoryProvider).login(perfil);
@@ -41,7 +46,18 @@ class SessaoNotifier extends Notifier<Usuario?> {
     return usuario;
   }
 
-  void sair() => state = null;
+  Future<Usuario> entrarComEmailSenha(String email, String senha) async {
+    final usuario = await ref
+        .read(authRepositoryProvider)
+        .entrarComEmailSenha(email, senha);
+    state = usuario;
+    return usuario;
+  }
+
+  Future<void> sair() async {
+    await ref.read(authRepositoryProvider).sair();
+    state = null;
+  }
 }
 
 final sessaoProvider =
@@ -65,11 +81,19 @@ final bibliotecaExerciciosProvider = FutureProvider<List<Exercicio>>(
 );
 
 final treinosDoAlunoProvider = FutureProvider.family<List<Treino>, String>(
-  (ref, alunoId) => ref.watch(treinoRepositoryProvider).doAluno(alunoId),
+  (ref, alunoId) async {
+    // Garante a biblioteca carregada para o lookup síncrono porId
+    // (nomes dos exercícios) usado pelas telas de treino.
+    await ref.watch(bibliotecaExerciciosProvider.future);
+    return ref.watch(treinoRepositoryProvider).doAluno(alunoId);
+  },
 );
 
 final treinoDoDiaProvider = FutureProvider<Treino?>(
-  (ref) => ref.watch(treinoRepositoryProvider).treinoDoDia(alunoLogadoId),
+  (ref) async {
+    await ref.watch(bibliotecaExerciciosProvider.future);
+    return ref.watch(treinoRepositoryProvider).treinoDoDia(alunoLogadoId);
+  },
 );
 
 final historicoConcluidosProvider =
@@ -261,8 +285,18 @@ final execucaoTreinoProvider =
 
 class ConversaNotifier extends FamilyAsyncNotifier<List<Mensagem>, String> {
   @override
-  Future<List<Mensagem>> build(String alunoId) =>
-      ref.watch(chatRepositoryProvider).conversa(alunoId);
+  Future<List<Mensagem>> build(String alunoId) {
+    final repo = ref.watch(chatRepositoryProvider);
+    // Tempo real: anexa mensagens novas (descartando duplicadas, já que as
+    // enviadas localmente entram pelo `enviar`).
+    final assinatura = repo.novasMensagens(alunoId).listen((msg) {
+      final atual = state.valueOrNull ?? const <Mensagem>[];
+      if (atual.any((m) => m.id == msg.id)) return;
+      state = AsyncData([...atual, msg]);
+    });
+    ref.onDispose(assinatura.cancel);
+    return repo.conversa(alunoId);
+  }
 
   Future<void> enviar(String texto, {required bool doAluno}) async {
     final msg = await ref.read(chatRepositoryProvider).enviar(
