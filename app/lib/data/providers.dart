@@ -29,6 +29,8 @@ final chatRepositoryProvider = Provider<ChatRepository>(
     (ref) => _supabase ? SupabaseChatRepository() : MockChatRepository());
 final evolucaoRepositoryProvider = Provider<EvolucaoRepository>((ref) =>
     _supabase ? SupabaseEvolucaoRepository() : MockEvolucaoRepository());
+final financeiroRepositoryProvider = Provider<FinanceiroRepository>((ref) =>
+    _supabase ? SupabaseFinanceiroRepository() : MockFinanceiroRepository());
 
 // -------------------------------------------------------------------- sessão
 
@@ -118,6 +120,8 @@ final alertasProvider = FutureProvider<List<AlertaPersonal>>((ref) async {
   final repo = ref.watch(treinoRepositoryProvider);
   final concluidos = await repo.historicoEmpresa(30);
   final programas = await repo.programasEmpresa();
+  final inadimplentes =
+      await ref.watch(financeiroRepositoryProvider).inadimplentes();
   final agora = DateTime.now();
 
   String nome(String alunoId) => alunos
@@ -163,6 +167,15 @@ final alertasProvider = FutureProvider<List<AlertaPersonal>>((ref) async {
               '${p.nome} termina em ${p.fim.difference(agora).inDays} dia(s) — planeje o próximo ciclo',
           alunoId: p.alunoId,
         ),
+    // 💰 mensalidades atrasadas
+    for (final m in inadimplentes)
+      AlertaPersonal(
+        tipo: 'financeiro',
+        titulo: '${nome(m.alunoId)} com mensalidade atrasada',
+        detalhe:
+            'Competência ${m.competencia.month.toString().padLeft(2, '0')}/${m.competencia.year} · R\$ ${m.valor.toStringAsFixed(2)}',
+        alunoId: m.alunoId,
+      ),
     // 🎂 aniversários nos próximos 7 dias
     for (final a in alunos)
       if (a.diasParaAniversario != null && a.diasParaAniversario! <= 7)
@@ -200,6 +213,99 @@ final pesosProvider = FutureProvider.family<List<RegistroPeso>, String>(
 final avaliacoesProvider = FutureProvider.family<List<AvaliacaoFisica>, String>(
   (ref, alunoId) => ref.watch(evolucaoRepositoryProvider).avaliacoes(alunoId),
 );
+
+final fotosEvolucaoProvider = FutureProvider.family<List<FotoAluno>, String>(
+  (ref, alunoId) =>
+      ref.watch(evolucaoRepositoryProvider).fotosEvolucao(alunoId),
+);
+
+final mensalidadesProvider = FutureProvider.family<List<Mensalidade>, String>(
+  (ref, alunoId) => ref.watch(financeiroRepositoryProvider).doAluno(alunoId),
+);
+
+/// Contador de copos de água do dia (aluno logado).
+class AguaNotifier extends AsyncNotifier<int> {
+  @override
+  Future<int> build() =>
+      ref.watch(evolucaoRepositoryProvider).coposHoje(alunoLogadoId);
+
+  Future<void> ajustar(int delta) async {
+    final novo = await ref
+        .read(evolucaoRepositoryProvider)
+        .registrarCopo(alunoLogadoId, delta);
+    state = AsyncData(novo);
+  }
+}
+
+final aguaProvider =
+    AsyncNotifierProvider<AguaNotifier, int>(AguaNotifier.new);
+
+/// Medalhas derivadas do histórico do aluno logado.
+final medalhasProvider = FutureProvider<List<Medalha>>((ref) async {
+  final historico = await ref
+      .watch(treinoRepositoryProvider)
+      .historicoConcluidos(alunoLogadoId);
+  final agora = DateTime.now();
+
+  // semanas consecutivas com ao menos 1 treino (a partir da semana atual)
+  var streak = 0;
+  for (var s = 0; s < 52; s++) {
+    final inicio = agora.subtract(Duration(days: 7 * (s + 1)));
+    final fim = agora.subtract(Duration(days: 7 * s));
+    final treinou = historico
+        .any((c) => c.data.isAfter(inicio) && !c.data.isAfter(fim));
+    if (treinou) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  final mesAtual = historico.where(
+      (c) => c.data.year == agora.year && c.data.month == agora.month);
+  final toneladasMes =
+      mesAtual.fold<double>(0, (t, c) => t + c.volumeTotalKg) / 1000;
+  final total = historico.length;
+
+  return [
+    Medalha(
+      id: 'streak4',
+      titulo: '4 semanas sem faltar',
+      descricao: 'Treine ao menos 1x por semana, 4 semanas seguidas',
+      emoji: '🔥',
+      conquistada: streak >= 4,
+    ),
+    Medalha(
+      id: 't10',
+      titulo: '10 treinos concluídos',
+      descricao: 'Complete 10 treinos no app',
+      emoji: '🥉',
+      conquistada: total >= 10,
+    ),
+    Medalha(
+      id: 't50',
+      titulo: '50 treinos concluídos',
+      descricao: 'Complete 50 treinos no app',
+      emoji: '🥈',
+      conquistada: total >= 50,
+    ),
+    Medalha(
+      id: 'ton10',
+      titulo: '10 toneladas no mês',
+      descricao:
+          'Levante 10.000 kg somados no mês (você está em ${toneladasMes.toStringAsFixed(1)} t)',
+      emoji: '🏋️',
+      conquistada: toneladasMes >= 10,
+    ),
+    Medalha(
+      id: 'madrugador',
+      titulo: 'Consistência total',
+      descricao: 'Treine na sua frequência-alvo por um mês inteiro',
+      emoji: '🏆',
+      conquistada: mesAtual.length >= 12,
+    ),
+  ];
+});
 
 final anamneseProvider = FutureProvider.family<Anamnese?, String>(
   (ref, alunoId) =>

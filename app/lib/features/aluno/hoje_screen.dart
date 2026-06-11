@@ -209,6 +209,8 @@ class _TreinoDoDia extends ConsumerWidget {
             ),
           ),
         ),
+        const SizedBox(height: 12),
+        const _CardAgua(),
         const SectionTitle('Exercícios de hoje'),
         for (final (i, item) in treino.itens.indexed)
           _ExercicioTile(
@@ -229,6 +231,63 @@ class _TreinoDoDia extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Contador diário de hidratação (meta: 8 copos).
+class _CardAgua extends ConsumerWidget {
+  const _CardAgua();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final copos = ref.watch(aguaProvider).valueOrNull ?? 0;
+    const meta = 8;
+    return Card(
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
+          children: [
+            const Text('💧', style: TextStyle(fontSize: 26)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Hidratação: $copos de $meta copos',
+                      style:
+                          const TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: (copos / meta).clamp(0.0, 1.0),
+                      minHeight: 6,
+                      color: Colors.lightBlue,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Remover copo',
+              onPressed: copos > 0
+                  ? () => ref.read(aguaProvider.notifier).ajustar(-1)
+                  : null,
+              icon: const Icon(Icons.remove_circle_outline),
+            ),
+            IconButton.filledTonal(
+              tooltip: 'Bebi um copo!',
+              onPressed: () => ref.read(aguaProvider.notifier).ajustar(1),
+              icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

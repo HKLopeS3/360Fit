@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import 'conquistas_screen.dart';
+import 'fotos_evolucao_screen.dart';
 import 'historico_screen.dart';
 
 class EvolucaoScreen extends ConsumerWidget {
@@ -21,6 +23,21 @@ class EvolucaoScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Minha evolução'),
         actions: [
+          IconButton(
+            tooltip: 'Fotos de evolução',
+            icon: const Icon(Icons.photo_library_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const FotosEvolucaoScreen()),
+            ),
+          ),
+          IconButton(
+            tooltip: 'Minhas conquistas',
+            icon: const Icon(Icons.emoji_events_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ConquistasScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Histórico de treinos',
             icon: const Icon(Icons.history),

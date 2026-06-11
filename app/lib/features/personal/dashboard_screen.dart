@@ -90,6 +90,7 @@ class DashboardScreen extends ConsumerWidget {
                       'sumido': ('🟠', Icons.hourglass_bottom),
                       'programa': ('🟡', Icons.event_repeat),
                       'aniversario': ('🎂', Icons.cake),
+                      'financeiro': ('💰', Icons.payments),
                     };
                     return Column(
                       children: [

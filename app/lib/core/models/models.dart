@@ -395,6 +395,47 @@ class Anamnese {
 
 enum AnguloFoto { frente, costas, perfilDireito, perfilEsquerdo }
 
+/// Mensalidade gerada manualmente pelo personal (Fase 1: sem gateway).
+class Mensalidade {
+  const Mensalidade({
+    required this.id,
+    required this.alunoId,
+    required this.competencia,
+    required this.valor,
+    required this.vencimento,
+    this.pagoEm,
+  });
+
+  final String id;
+  final String alunoId;
+
+  /// 1º dia do mês de referência.
+  final DateTime competencia;
+  final double valor;
+  final DateTime vencimento;
+  final DateTime? pagoEm;
+
+  bool get paga => pagoEm != null;
+  bool get atrasada => !paga && DateTime.now().isAfter(vencimento);
+}
+
+/// Medalha de gamificação derivada do histórico (sem persistência).
+class Medalha {
+  const Medalha({
+    required this.id,
+    required this.titulo,
+    required this.descricao,
+    required this.emoji,
+    required this.conquistada,
+  });
+
+  final String id;
+  final String titulo;
+  final String descricao;
+  final String emoji;
+  final bool conquistada;
+}
+
 /// Foto postural ou de evolução. No mock os bytes vivem em memória;
 /// no Supabase a foto vai para o Storage e [url] é preenchida.
 class FotoAluno {

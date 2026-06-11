@@ -296,4 +296,94 @@ class MockEvolucaoRepository implements EvolucaoRepository {
   Future<List<FotoAluno>> fotosPostura(String alunoId) => _simulaRede(
         _db.fotosPostura.where((f) => f.alunoId == alunoId).toList(),
       );
+
+  @override
+  Future<void> salvarFotoEvolucao({
+    required String alunoId,
+    required List<int> bytes,
+    String observacao = '',
+  }) {
+    _db.fotosEvolucao.add(FotoAluno(
+      id: 'fe${_db.fotosEvolucao.length + 1}',
+      alunoId: alunoId,
+      data: DateTime.now(),
+      bytes: bytes,
+      observacao: observacao,
+    ));
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<List<FotoAluno>> fotosEvolucao(String alunoId) => _simulaRede(
+        _db.fotosEvolucao.where((f) => f.alunoId == alunoId).toList()
+          ..sort((a, b) => a.data.compareTo(b.data)),
+      );
+
+  String _chaveAgua(String alunoId) {
+    final hoje = DateTime.now();
+    return '$alunoId|${hoje.year}-${hoje.month}-${hoje.day}';
+  }
+
+  @override
+  Future<int> coposHoje(String alunoId) =>
+      _simulaRede(_db.agua[_chaveAgua(alunoId)] ?? 0);
+
+  @override
+  Future<int> registrarCopo(String alunoId, int delta) {
+    final chave = _chaveAgua(alunoId);
+    final novo = ((_db.agua[chave] ?? 0) + delta).clamp(0, 30);
+    _db.agua[chave] = novo;
+    return _simulaRede(novo);
+  }
+}
+
+class MockFinanceiroRepository implements FinanceiroRepository {
+  final _db = MockDatabase.instance;
+
+  @override
+  Future<List<Mensalidade>> doAluno(String alunoId) => _simulaRede(
+        _db.mensalidades.where((m) => m.alunoId == alunoId).toList()
+          ..sort((a, b) => b.competencia.compareTo(a.competencia)),
+      );
+
+  @override
+  Future<void> gerar(String alunoId, DateTime competencia, double valor) {
+    final comp = DateTime(competencia.year, competencia.month, 1);
+    final jaExiste = _db.mensalidades.any((m) =>
+        m.alunoId == alunoId &&
+        m.competencia.year == comp.year &&
+        m.competencia.month == comp.month);
+    if (!jaExiste) {
+      _db.mensalidades.add(Mensalidade(
+        id: 'me${_db.mensalidades.length + 1}',
+        alunoId: alunoId,
+        competencia: comp,
+        valor: valor,
+        vencimento: DateTime(comp.year, comp.month, 10),
+      ));
+    }
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<void> marcarPaga(String id) {
+    final i = _db.mensalidades.indexWhere((m) => m.id == id);
+    if (i >= 0) {
+      final m = _db.mensalidades[i];
+      _db.mensalidades[i] = Mensalidade(
+        id: m.id,
+        alunoId: m.alunoId,
+        competencia: m.competencia,
+        valor: m.valor,
+        vencimento: m.vencimento,
+        pagoEm: DateTime.now(),
+      );
+    }
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<List<Mensalidade>> inadimplentes() => _simulaRede(
+        _db.mensalidades.where((m) => m.atrasada).toList(),
+      );
 }

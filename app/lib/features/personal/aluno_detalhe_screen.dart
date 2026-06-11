@@ -13,6 +13,124 @@ import 'fotos_postura_screen.dart';
 import 'nova_avaliacao_screen.dart';
 import 'programa_widgets.dart';
 
+/// Mensalidades manuais do aluno (Fase 1: sem gateway de pagamento).
+class _FinanceiroSection extends ConsumerWidget {
+  const _FinanceiroSection({required this.alunoId});
+
+  final String alunoId;
+
+  Future<void> _gerarMes(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: '250,00');
+    final valor = await showDialog<double>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gerar mensalidade do mês'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(
+            labelText: 'Valor',
+            prefixText: 'R\$ ',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(
+                double.tryParse(controller.text.replaceAll(',', '.'))),
+            child: const Text('Gerar'),
+          ),
+        ],
+      ),
+    );
+    if (valor == null) return;
+    await ref
+        .read(financeiroRepositoryProvider)
+        .gerar(alunoId, DateTime.now(), valor);
+    ref.invalidate(mensalidadesProvider(alunoId));
+    ref.invalidate(alertasProvider);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mensalidadesAsync = ref.watch(mensalidadesProvider(alunoId));
+    final brand = context.brand;
+    final fmt = DateFormat('MM/y');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(
+          'Mensalidades',
+          trailing: TextButton.icon(
+            onPressed: () => _gerarMes(context, ref),
+            icon: const Icon(Icons.add, size: 18),
+            label: const Text('Gerar mês'),
+          ),
+        ),
+        AsyncView(
+          value: mensalidadesAsync,
+          builder: (mensalidades) => mensalidades.isEmpty
+              ? const Card(
+                  color: Colors.white,
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text('Nenhuma mensalidade gerada ainda.'),
+                  ),
+                )
+              : Column(
+                  children: [
+                    for (final m in mensalidades.take(4))
+                      Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: Icon(
+                            m.paga
+                                ? Icons.check_circle
+                                : m.atrasada
+                                    ? Icons.error
+                                    : Icons.schedule,
+                            color: m.paga
+                                ? brand.sucesso
+                                : m.atrasada
+                                    ? Theme.of(context).colorScheme.error
+                                    : null,
+                          ),
+                          title: Text(
+                              '${fmt.format(m.competencia)} · R\$ ${m.valor.toStringAsFixed(2)}'),
+                          subtitle: Text(m.paga
+                              ? 'Paga em ${DateFormat('dd/MM').format(m.pagoEm!)}'
+                              : m.atrasada
+                                  ? 'ATRASADA — venceu ${DateFormat('dd/MM').format(m.vencimento)}'
+                                  : 'Vence ${DateFormat('dd/MM').format(m.vencimento)}'),
+                          trailing: m.paga
+                              ? null
+                              : FilledButton.tonal(
+                                  onPressed: () async {
+                                    await ref
+                                        .read(financeiroRepositoryProvider)
+                                        .marcarPaga(m.id);
+                                    ref.invalidate(
+                                        mensalidadesProvider(alunoId));
+                                    ref.invalidate(alertasProvider);
+                                  },
+                                  child: const Text('Recebi'),
+                                ),
+                        ),
+                      ),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+}
+
 class AlunoDetalheScreen extends ConsumerWidget {
   const AlunoDetalheScreen({super.key, required this.alunoId});
 
@@ -108,6 +226,7 @@ class AlunoDetalheScreen extends ConsumerWidget {
               ),
             ),
             ProgramaSection(alunoId: alunoId),
+            _FinanceiroSection(alunoId: alunoId),
             const SectionTitle('Treinos prescritos'),
             AsyncView(
               value: treinosAsync,

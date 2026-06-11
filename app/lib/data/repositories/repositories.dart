@@ -115,4 +115,32 @@ abstract interface class EvolucaoRepository {
   });
 
   Future<List<FotoAluno>> fotosPostura(String alunoId);
+
+  // ------------------------------------------------------ retenção (aluno)
+
+  Future<void> salvarFotoEvolucao({
+    required String alunoId,
+    required List<int> bytes,
+    String observacao = '',
+  });
+
+  Future<List<FotoAluno>> fotosEvolucao(String alunoId);
+
+  /// Copos de água registrados hoje.
+  Future<int> coposHoje(String alunoId);
+
+  /// Ajusta o total de copos de hoje (delta +1/-1).
+  Future<int> registrarCopo(String alunoId, int delta);
+}
+
+abstract interface class FinanceiroRepository {
+  Future<List<Mensalidade>> doAluno(String alunoId);
+
+  /// Gera a mensalidade do mês (competência = 1º dia do mês).
+  Future<void> gerar(String alunoId, DateTime competencia, double valor);
+
+  Future<void> marcarPaga(String id);
+
+  /// Mensalidades em atraso de toda a carteira.
+  Future<List<Mensalidade>> inadimplentes();
 }

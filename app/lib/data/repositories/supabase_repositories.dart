@@ -497,6 +497,66 @@ class SupabaseAgendaRepository implements AgendaRepository {
   }
 }
 
+class SupabaseFinanceiroRepository implements FinanceiroRepository {
+  Mensalidade _mapear(Map<String, dynamic> l) => Mensalidade(
+        id: l['id'] as String,
+        alunoId: l['aluno_id'] as String,
+        competencia: DateTime.parse(l['competencia'] as String),
+        valor: (l['valor'] as num).toDouble(),
+        vencimento: DateTime.parse(l['vencimento'] as String),
+        pagoEm: l['pago_em'] == null
+            ? null
+            : DateTime.parse(l['pago_em'] as String),
+      );
+
+  @override
+  Future<List<Mensalidade>> doAluno(String alunoId) async {
+    final linhas = await _db
+        .from('mensalidades')
+        .select()
+        .eq('aluno_id', alunoId)
+        .order('competencia', ascending: false);
+    return [for (final l in linhas) _mapear(l)];
+  }
+
+  @override
+  Future<void> gerar(
+      String alunoId, DateTime competencia, double valor) async {
+    final perfil = await _db
+        .from('perfis')
+        .select('empresa_id')
+        .eq('id', _db.auth.currentUser!.id)
+        .single();
+    final comp = DateTime(competencia.year, competencia.month, 1);
+    await _db.from('mensalidades').upsert({
+      'empresa_id': perfil['empresa_id'],
+      'aluno_id': alunoId,
+      'competencia': comp.toIso8601String().substring(0, 10),
+      'valor': valor,
+      'vencimento': DateTime(comp.year, comp.month, 10)
+          .toIso8601String()
+          .substring(0, 10),
+    }, onConflict: 'aluno_id,competencia');
+  }
+
+  @override
+  Future<void> marcarPaga(String id) async {
+    await _db.from('mensalidades').update({
+      'pago_em': DateTime.now().toIso8601String().substring(0, 10),
+    }).eq('id', id);
+  }
+
+  @override
+  Future<List<Mensalidade>> inadimplentes() async {
+    final linhas = await _db
+        .from('mensalidades')
+        .select()
+        .isFilter('pago_em', null)
+        .lt('vencimento', DateTime.now().toIso8601String().substring(0, 10));
+    return [for (final l in linhas) _mapear(l)];
+  }
+}
+
 class SupabaseChatRepository implements ChatRepository {
   @override
   Stream<Mensagem> novasMensagens(String alunoId) {
@@ -769,6 +829,77 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
       'angulo': angulo.name,
       'url': url,
     });
+  }
+
+  @override
+  Future<void> salvarFotoEvolucao({
+    required String alunoId,
+    required List<int> bytes,
+    String observacao = '',
+  }) async {
+    final empresa = await _empresa();
+    final id = await _resolveAlunoId(alunoId);
+    final caminho =
+        '$empresa/$id/${DateTime.now().millisecondsSinceEpoch}-evolucao.jpg';
+    await _db.storage.from('fotos-evolucao').uploadBinary(
+        caminho, Uint8List.fromList(bytes),
+        fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    final url = await _db.storage
+        .from('fotos-evolucao')
+        .createSignedUrl(caminho, 60 * 60 * 24 * 365);
+    await _db.from('fotos_evolucao').insert({
+      'empresa_id': empresa,
+      'aluno_id': id,
+      'url': url,
+      'observacao': observacao,
+    });
+  }
+
+  @override
+  Future<List<FotoAluno>> fotosEvolucao(String alunoId) async {
+    final linhas = await _db
+        .from('fotos_evolucao')
+        .select()
+        .eq('aluno_id', await _resolveAlunoId(alunoId))
+        .order('data', ascending: true);
+    return [
+      for (final l in linhas)
+        FotoAluno(
+          id: l['id'] as String,
+          alunoId: l['aluno_id'] as String,
+          data: DateTime.parse(l['data'] as String),
+          url: l['url'] as String,
+          observacao: (l['observacao'] as String?) ?? '',
+        ),
+    ];
+  }
+
+  String get _hojeIso =>
+      DateTime.now().toIso8601String().substring(0, 10);
+
+  @override
+  Future<int> coposHoje(String alunoId) async {
+    final linhas = await _db
+        .from('agua_registros')
+        .select('copos')
+        .eq('aluno_id', await _resolveAlunoId(alunoId))
+        .eq('data', _hojeIso);
+    if (linhas.isEmpty) return 0;
+    return (linhas.first['copos'] as num).toInt();
+  }
+
+  @override
+  Future<int> registrarCopo(String alunoId, int delta) async {
+    final id = await _resolveAlunoId(alunoId);
+    final atual = await coposHoje(alunoId);
+    final novo = (atual + delta).clamp(0, 30);
+    await _db.from('agua_registros').upsert({
+      'empresa_id': await _empresa(),
+      'aluno_id': id,
+      'data': _hojeIso,
+      'copos': novo,
+    }, onConflict: 'aluno_id,data');
+    return novo;
   }
 
   @override

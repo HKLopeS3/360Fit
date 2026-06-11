@@ -432,6 +432,28 @@ class MockDatabase {
 
   final List<Anamnese> anamneses = [];
   final List<FotoAluno> fotosPostura = [];
+  final List<FotoAluno> fotosEvolucao = [];
+
+  /// copos de água por aluno+dia ('a1|2026-06-11' → 5).
+  final Map<String, int> agua = {};
+
+  late final List<Mensalidade> mensalidades = [
+    Mensalidade(
+      id: 'me1',
+      alunoId: 'a3',
+      competencia: DateTime(_hoje.year, _hoje.month - 1, 1),
+      valor: 250,
+      vencimento: DateTime(_hoje.year, _hoje.month - 1, 10),
+    ),
+    Mensalidade(
+      id: 'me2',
+      alunoId: 'a1',
+      competencia: DateTime(_hoje.year, _hoje.month, 1),
+      valor: 250,
+      vencimento: DateTime(_hoje.year, _hoje.month, 10),
+      pagoEm: DateTime(_hoje.year, _hoje.month, 5),
+    ),
+  ];
 
   // ---------------------------------------------------- frequência (semana)
 
