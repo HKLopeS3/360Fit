@@ -25,7 +25,8 @@ class _AlunosScreenState extends ConsumerState<AlunosScreen> {
         title: const Text('Meus alunos'),
         actions: const [LogoutButton()],
       ),
-      body: Column(
+      body: PaginaCentralizada(
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
@@ -88,6 +89,7 @@ class _AlunosScreenState extends ConsumerState<AlunosScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

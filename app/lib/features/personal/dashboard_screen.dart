@@ -18,10 +18,15 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Olá, ${sessao?.primeiroNome ?? 'Personal'} 💪'),
+        title: Text(
+          'Olá, ${sessao?.primeiroNome ?? 'Personal'} 💪',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         actions: const [LogoutButton()],
       ),
-      body: AsyncView(
+      body: PaginaCentralizada(
+        child: AsyncView(
         value: alunosAsync,
         builder: (alunos) {
           final emRisco = alunos.where((a) => a.riscoEvasao).toList();
@@ -34,50 +39,36 @@ class DashboardScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: MetricCard(
-                      titulo: 'Alunos ativos',
-                      valor: '${alunos.length}',
-                      subtitulo: '+2 este mês',
-                      icone: Icons.group,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: MetricCard(
-                      titulo: 'Risco de evasão',
-                      valor: '${emRisco.length}',
-                      subtitulo: 'precisam de atenção',
-                      icone: Icons.warning_amber,
-                      corIcone: context.brand.alerta,
-                    ),
-                  ),
-                ],
+              ParDeMetricas(
+                primeiro: MetricCard(
+                  titulo: 'Alunos ativos',
+                  valor: '${alunos.length}',
+                  subtitulo: '+2 este mês',
+                  icone: Icons.group,
+                ),
+                segundo: MetricCard(
+                  titulo: 'Risco de evasão',
+                  valor: '${emRisco.length}',
+                  subtitulo: 'precisam de atenção',
+                  icone: Icons.warning_amber,
+                  corIcone: context.brand.alerta,
+                ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: MetricCard(
-                      titulo: 'Frequência média',
-                      valor: '${freqMedia.toStringAsFixed(1)}x',
-                      subtitulo: 'por semana',
-                      icone: Icons.event_repeat,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: MetricCard(
-                      titulo: 'Treinos na semana',
-                      valor:
-                          '${MockDatabase.instance.treinosRealizadosSemana.reduce((a, b) => a + b)}',
-                      subtitulo: 'realizados pelos alunos',
-                      icone: Icons.fitness_center,
-                    ),
-                  ),
-                ],
+              ParDeMetricas(
+                primeiro: MetricCard(
+                  titulo: 'Frequência média',
+                  valor: '${freqMedia.toStringAsFixed(1)}x',
+                  subtitulo: 'por semana',
+                  icone: Icons.event_repeat,
+                ),
+                segundo: MetricCard(
+                  titulo: 'Treinos na semana',
+                  valor:
+                      '${MockDatabase.instance.treinosRealizadosSemana.reduce((a, b) => a + b)}',
+                  subtitulo: 'realizados pelos alunos',
+                  icone: Icons.fitness_center,
+                ),
               ),
               const SectionTitle('Treinos realizados — últimos 7 dias'),
               Card(
@@ -116,6 +107,7 @@ class DashboardScreen extends ConsumerWidget {
             ],
           );
         },
+        ),
       ),
     );
   }

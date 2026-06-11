@@ -100,7 +100,8 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
               icon: const Icon(Icons.add),
               label: const Text('Exercício'),
             ),
-      body: AsyncView(
+      body: PaginaCentralizada(
+        child: AsyncView(
         value: alunosAsync,
         builder: (alunos) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -168,6 +169,7 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
                 ),
             ],
           ],
+        ),
         ),
       ),
     );
@@ -374,7 +376,9 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Ajustar exercício'),
-      content: Column(
+      // scrollável para caber em alturas pequenas (teclado aberto, janelas baixas)
+      content: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
@@ -411,6 +415,7 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
             decoration: const InputDecoration(labelText: 'Carga (kg)'),
           ),
         ],
+        ),
       ),
       actions: [
         TextButton(

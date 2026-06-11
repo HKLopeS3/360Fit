@@ -17,17 +17,19 @@ class AgendaAlunoScreen extends ConsumerWidget {
         title: const Text('Minha agenda'),
         actions: const [LogoutButton()],
       ),
-      body: AsyncView(
-        value: agendaAsync,
-        builder: (agendamentos) => agendamentos.isEmpty
-            ? const Center(child: Text('Nenhum agendamento futuro.'))
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                children: [
-                  for (final a in agendamentos)
-                    AgendamentoCard(agendamento: a),
-                ],
-              ),
+      body: PaginaCentralizada(
+        child: AsyncView(
+          value: agendaAsync,
+          builder: (agendamentos) => agendamentos.isEmpty
+              ? const Center(child: Text('Nenhum agendamento futuro.'))
+              : ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  children: [
+                    for (final a in agendamentos)
+                      AgendamentoCard(agendamento: a),
+                  ],
+                ),
+        ),
       ),
     );
   }

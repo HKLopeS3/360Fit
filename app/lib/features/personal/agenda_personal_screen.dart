@@ -19,7 +19,8 @@ class AgendaPersonalScreen extends ConsumerWidget {
         title: const Text('Agenda da semana'),
         actions: const [LogoutButton()],
       ),
-      body: AsyncView(
+      body: PaginaCentralizada(
+        child: AsyncView(
         value: agendaAsync,
         builder: (agendamentos) => AsyncView(
           value: alunosAsync,
@@ -56,6 +57,7 @@ class AgendaPersonalScreen extends ConsumerWidget {
               ],
             );
           },
+        ),
         ),
       ),
     );

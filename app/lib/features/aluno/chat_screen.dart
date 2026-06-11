@@ -24,23 +24,25 @@ class ChatScreen extends ConsumerWidget {
         title: Text(comoAluno ? 'Chat com o personal' : 'Chat com o aluno'),
         actions: comoAluno ? const [LogoutButton()] : null,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: AsyncView(
-              value: conversaAsync,
-              builder: (mensagens) => ListView(
-                reverse: true,
-                padding: const EdgeInsets.all(16),
-                children: [
-                  for (final m in mensagens.reversed)
-                    _Balao(mensagem: m, minha: m.doAluno == comoAluno),
-                ],
+      body: PaginaCentralizada(
+        child: Column(
+          children: [
+            Expanded(
+              child: AsyncView(
+                value: conversaAsync,
+                builder: (mensagens) => ListView(
+                  reverse: true,
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    for (final m in mensagens.reversed)
+                      _Balao(mensagem: m, minha: m.doAluno == comoAluno),
+                  ],
+                ),
               ),
             ),
-          ),
-          _CampoMensagem(alunoId: alunoId, comoAluno: comoAluno),
-        ],
+            _CampoMensagem(alunoId: alunoId, comoAluno: comoAluno),
+          ],
+        ),
       ),
     );
   }

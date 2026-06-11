@@ -184,6 +184,36 @@ class MetricCard extends StatelessWidget {
   }
 }
 
+/// Dois cards de métrica lado a lado; empilha em telas muito estreitas
+/// para os números não ficarem espremidos.
+class ParDeMetricas extends StatelessWidget {
+  const ParDeMetricas({super.key, required this.primeiro, required this.segundo});
+
+  final Widget primeiro;
+  final Widget segundo;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 340) {
+          return Column(
+            children: [primeiro, const SizedBox(height: 12), segundo],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: primeiro),
+            const SizedBox(width: 12),
+            Expanded(child: segundo),
+          ],
+        );
+      },
+    );
+  }
+}
+
 // ------------------------------------------------------------------ formatos
 
 final fmtDiaMes = DateFormat('dd/MM');

@@ -21,7 +21,8 @@ class EvolucaoScreen extends ConsumerWidget {
         title: const Text('Minha evolução'),
         actions: const [LogoutButton()],
       ),
-      body: ListView(
+      body: PaginaCentralizada(
+        child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
           const SectionTitle('Peso corporal (kg)'),
@@ -77,6 +78,7 @@ class EvolucaoScreen extends ConsumerWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }

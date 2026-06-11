@@ -30,7 +30,8 @@ class AlunoDetalheScreen extends ConsumerWidget {
         icon: const Icon(Icons.chat_bubble_outline),
         label: const Text('Conversar'),
       ),
-      body: AsyncView(
+      body: PaginaCentralizada(
+        child: AsyncView(
         value: alunoAsync,
         builder: (aluno) => ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
@@ -72,25 +73,18 @@ class AlunoDetalheScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: MetricCard(
-                    titulo: 'Peso atual',
-                    valor: '${aluno.pesoAtualKg.toStringAsFixed(1)} kg',
-                    icone: Icons.monitor_weight,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: MetricCard(
-                    titulo: 'Frequência',
-                    valor: '${aluno.frequenciaSemanal}x',
-                    subtitulo: 'por semana',
-                    icone: Icons.event_repeat,
-                  ),
-                ),
-              ],
+            ParDeMetricas(
+              primeiro: MetricCard(
+                titulo: 'Peso atual',
+                valor: '${aluno.pesoAtualKg.toStringAsFixed(1)} kg',
+                icone: Icons.monitor_weight,
+              ),
+              segundo: MetricCard(
+                titulo: 'Frequência',
+                valor: '${aluno.frequenciaSemanal}x',
+                subtitulo: 'por semana',
+                icone: Icons.event_repeat,
+              ),
             ),
             const SectionTitle('Treinos prescritos'),
             AsyncView(
@@ -139,6 +133,7 @@ class AlunoDetalheScreen extends ConsumerWidget {
                     ),
             ),
           ],
+        ),
         ),
       ),
     );

@@ -19,7 +19,11 @@ class HojeScreen extends ConsumerWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Olá, ${sessao?.primeiroNome ?? 'Aluno'} 👋'),
+            Text(
+              'Olá, ${sessao?.primeiroNome ?? 'Aluno'} 👋',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             Text(
               capitalizar(fmtDataCompleta.format(DateTime.now())),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -30,11 +34,13 @@ class HojeScreen extends ConsumerWidget {
         toolbarHeight: 72,
         actions: const [LogoutButton()],
       ),
-      body: AsyncView(
-        value: treinoAsync,
-        builder: (treino) => treino == null
-            ? const _DiaDeDescanso()
-            : _TreinoDoDia(treino: treino),
+      body: PaginaCentralizada(
+        child: AsyncView(
+          value: treinoAsync,
+          builder: (treino) => treino == null
+              ? const _DiaDeDescanso()
+              : _TreinoDoDia(treino: treino),
+        ),
       ),
     );
   }
@@ -180,11 +186,14 @@ class _ExercicioTile extends StatelessWidget {
         subtitle: Text(
           '${item.series}x ${item.repeticoes}$carga · descanso ${item.descansoSeg}s',
         ),
-        secondary: Chip(
-          label: Text(exercicio.grupoMuscular,
-              style: theme.textTheme.labelSmall),
-          visualDensity: VisualDensity.compact,
-        ),
+        // Em telas estreitas o chip rouba espaço do nome do exercício.
+        secondary: MediaQuery.sizeOf(context).width < 420
+            ? null
+            : Chip(
+                label: Text(exercicio.grupoMuscular,
+                    style: theme.textTheme.labelSmall),
+                visualDensity: VisualDensity.compact,
+              ),
       ),
     );
   }
