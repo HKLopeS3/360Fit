@@ -1,0 +1,191 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../app/theme/brand_theme.dart';
+import '../../core/models/models.dart';
+import '../../data/providers.dart';
+import '../../shared/widgets.dart';
+
+class HojeScreen extends ConsumerWidget {
+  const HojeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sessao = ref.watch(sessaoProvider);
+    final treinoAsync = ref.watch(treinoDoDiaProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Olá, ${sessao?.primeiroNome ?? 'Aluno'} 👋'),
+            Text(
+              capitalizar(fmtDataCompleta.format(DateTime.now())),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+        toolbarHeight: 72,
+        actions: const [LogoutButton()],
+      ),
+      body: AsyncView(
+        value: treinoAsync,
+        builder: (treino) => treino == null
+            ? const _DiaDeDescanso()
+            : _TreinoDoDia(treino: treino),
+      ),
+    );
+  }
+}
+
+class _DiaDeDescanso extends StatelessWidget {
+  const _DiaDeDescanso();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.self_improvement, size: 72, color: Colors.teal),
+          const SizedBox(height: 12),
+          Text('Hoje é dia de descanso!',
+              style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 4),
+          const Text('Aproveite para se recuperar e hidratar.'),
+        ],
+      ),
+    );
+  }
+}
+
+class _TreinoDoDia extends ConsumerWidget {
+  const _TreinoDoDia({required this.treino});
+
+  final Treino treino;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final brand = context.brand;
+    final theme = Theme.of(context);
+    final execucao = ref.watch(execucaoTreinoProvider);
+    final concluidos = execucao[treino.id] ?? const <int>{};
+    final progresso =
+        treino.itens.isEmpty ? 0.0 : concluidos.length / treino.itens.length;
+    final exercicios = ref.read(exercicioRepositoryProvider);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      children: [
+        // Cartão-resumo do treino
+        Card(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: brand.gradientePrimario,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${treino.nome} — ${treino.foco}',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                      color: Colors.white, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${treino.itens.length} exercícios',
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(color: Colors.white70),
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progresso,
+                    minHeight: 8,
+                    backgroundColor: Colors.white24,
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  progresso == 1.0
+                      ? 'Treino concluído! 🎉'
+                      : '${concluidos.length} de ${treino.itens.length} concluídos',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SectionTitle('Exercícios de hoje'),
+        for (final (i, item) in treino.itens.indexed)
+          _ExercicioTile(
+            item: item,
+            exercicio: exercicios.porId(item.exercicioId),
+            concluido: concluidos.contains(i),
+            aoMarcar: () => ref
+                .read(execucaoTreinoProvider.notifier)
+                .alternar(treino.id, i),
+          ),
+      ],
+    );
+  }
+}
+
+class _ExercicioTile extends StatelessWidget {
+  const _ExercicioTile({
+    required this.item,
+    required this.exercicio,
+    required this.concluido,
+    required this.aoMarcar,
+  });
+
+  final ItemTreino item;
+  final Exercicio exercicio;
+  final bool concluido;
+  final VoidCallback aoMarcar;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final brand = context.brand;
+    final carga = item.cargaKg > 0 ? ' · ${item.cargaKg.toStringAsFixed(item.cargaKg % 1 == 0 ? 0 : 1)} kg' : '';
+    return Card(
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: CheckboxListTile(
+        value: concluido,
+        onChanged: (_) => aoMarcar(),
+        controlAffinity: ListTileControlAffinity.leading,
+        activeColor: brand.sucesso,
+        title: Text(
+          exercicio.nome,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            decoration: concluido ? TextDecoration.lineThrough : null,
+            color: concluido ? theme.colorScheme.onSurfaceVariant : null,
+          ),
+        ),
+        subtitle: Text(
+          '${item.series}x ${item.repeticoes}$carga · descanso ${item.descansoSeg}s',
+        ),
+        secondary: Chip(
+          label: Text(exercicio.grupoMuscular,
+              style: theme.textTheme.labelSmall),
+          visualDensity: VisualDensity.compact,
+        ),
+      ),
+    );
+  }
+}

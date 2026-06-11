@@ -1,0 +1,17 @@
+# Flutter / Dart
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/*.iml
+**/.idea/
+**/.gradle/
+**/Pods/
+**/.symlinks/
+**/ephemeral/
+
+# SO / editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/

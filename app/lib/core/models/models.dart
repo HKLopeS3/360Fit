@@ -1,0 +1,201 @@
+/// Modelos de domínio do 360Fit.
+///
+/// Nesta fase os dados são mockados; os modelos já refletem o contrato
+/// esperado da futura API (NestJS), para que a troca de fonte de dados
+/// não exija mudanças na UI.
+library;
+
+enum PerfilUsuario { aluno, personal }
+
+class Usuario {
+  const Usuario({
+    required this.id,
+    required this.nome,
+    required this.email,
+    required this.perfil,
+  });
+
+  final String id;
+  final String nome;
+  final String email;
+  final PerfilUsuario perfil;
+
+  String get primeiroNome => nome.split(' ').first;
+}
+
+class Aluno {
+  const Aluno({
+    required this.id,
+    required this.nome,
+    required this.idade,
+    required this.objetivo,
+    required this.inicio,
+    required this.frequenciaSemanal,
+    required this.pesoAtualKg,
+    this.riscoEvasao = false,
+  });
+
+  final String id;
+  final String nome;
+  final int idade;
+  final String objetivo;
+  final DateTime inicio;
+
+  /// Quantos treinos por semana o aluno tem feito em média.
+  final int frequenciaSemanal;
+  final double pesoAtualKg;
+  final bool riscoEvasao;
+
+  String get primeiroNome => nome.split(' ').first;
+  String get iniciais {
+    final partes = nome.split(' ');
+    if (partes.length == 1) return partes.first.substring(0, 1);
+    return '${partes.first[0]}${partes.last[0]}';
+  }
+}
+
+class Exercicio {
+  const Exercicio({
+    required this.id,
+    required this.nome,
+    required this.grupoMuscular,
+    required this.equipamento,
+  });
+
+  final String id;
+  final String nome;
+  final String grupoMuscular;
+  final String equipamento;
+}
+
+class ItemTreino {
+  const ItemTreino({
+    required this.exercicioId,
+    required this.series,
+    required this.repeticoes,
+    required this.cargaKg,
+    this.descansoSeg = 60,
+  });
+
+  final String exercicioId;
+  final int series;
+  final String repeticoes; // ex.: "8-12", "15"
+  final double cargaKg;
+  final int descansoSeg;
+
+  ItemTreino copyWith({
+    int? series,
+    String? repeticoes,
+    double? cargaKg,
+    int? descansoSeg,
+  }) {
+    return ItemTreino(
+      exercicioId: exercicioId,
+      series: series ?? this.series,
+      repeticoes: repeticoes ?? this.repeticoes,
+      cargaKg: cargaKg ?? this.cargaKg,
+      descansoSeg: descansoSeg ?? this.descansoSeg,
+    );
+  }
+}
+
+class Treino {
+  const Treino({
+    required this.id,
+    required this.alunoId,
+    required this.nome,
+    required this.foco,
+    required this.diasSemana,
+    required this.itens,
+  });
+
+  final String id;
+  final String alunoId;
+  final String nome; // ex.: "Treino A"
+  final String foco; // ex.: "Peito e Tríceps"
+  final List<int> diasSemana; // DateTime.monday..sunday
+  final List<ItemTreino> itens;
+
+  Treino copyWith({List<ItemTreino>? itens, String? foco, String? nome}) {
+    return Treino(
+      id: id,
+      alunoId: alunoId,
+      nome: nome ?? this.nome,
+      foco: foco ?? this.foco,
+      diasSemana: diasSemana,
+      itens: itens ?? this.itens,
+    );
+  }
+}
+
+enum TipoAgendamento { treino, avaliacao, consulta }
+
+class Agendamento {
+  const Agendamento({
+    required this.id,
+    required this.alunoId,
+    required this.titulo,
+    required this.tipo,
+    required this.dataHora,
+    required this.local,
+  });
+
+  final String id;
+  final String alunoId;
+  final String titulo;
+  final TipoAgendamento tipo;
+  final DateTime dataHora;
+  final String local;
+}
+
+class Mensagem {
+  const Mensagem({
+    required this.id,
+    required this.alunoId,
+    required this.doAluno,
+    required this.texto,
+    required this.dataHora,
+  });
+
+  final String id;
+  final String alunoId;
+
+  /// true = enviada pelo aluno; false = enviada pelo personal.
+  final bool doAluno;
+  final String texto;
+  final DateTime dataHora;
+}
+
+class RegistroPeso {
+  const RegistroPeso({required this.data, required this.pesoKg});
+
+  final DateTime data;
+  final double pesoKg;
+}
+
+class AvaliacaoFisica {
+  const AvaliacaoFisica({
+    required this.data,
+    required this.pesoKg,
+    required this.gorduraPct,
+    required this.massaMagraKg,
+  });
+
+  final DateTime data;
+  final double pesoKg;
+  final double gorduraPct;
+  final double massaMagraKg;
+}
+
+/// Evolução de carga em um exercício-chave (ex.: supino, agachamento).
+class RegistroCarga {
+  const RegistroCarga({
+    required this.exercicioId,
+    required this.data,
+    required this.cargaKg,
+  });
+
+  final String exercicioId;
+  final DateTime data;
+  final double cargaKg;
+}
