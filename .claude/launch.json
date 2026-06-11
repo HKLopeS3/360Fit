@@ -7,6 +7,21 @@
       "runtimeArgs": ["run", "-d", "web-server", "--release", "--web-port=8077"],
       "cwd": "app",
       "port": 8077
+    },
+    {
+      "name": "fit360-web-supabase",
+      "runtimeExecutable": "C:\\dev\\flutter\\bin\\flutter.bat",
+      "runtimeArgs": [
+        "run",
+        "-d",
+        "web-server",
+        "--release",
+        "--web-port=8078",
+        "--dart-define=SUPABASE_URL=https://rvplwftnzsfjcpwgqsig.supabase.co",
+        "--dart-define=SUPABASE_ANON_KEY=sb_publishable_0jq-BTTWm7buWedk3eJPnA_3BKxyPlC"
+      ],
+      "cwd": "app",
+      "port": 8078
     }
   ]
 }

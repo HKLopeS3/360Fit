@@ -10,6 +10,9 @@
 **/.symlinks/
 **/ephemeral/
 
+# Credenciais locais
+.env.local
+
 # SO / editor
 .DS_Store
 Thumbs.db
