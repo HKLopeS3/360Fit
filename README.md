@@ -4,12 +4,12 @@ Plataforma SaaS multi-tenant de gestão fitness, saúde e performance para perso
 
 ## Estado atual
 
-Fase 1 — validação de UX: app mobile Flutter (`app/`) com **dados mockados**, atendendo duas personas no mesmo app:
+**Fase 1** — app Flutter ([app/](app)) com dados mockados e dois perfis no mesmo app (login de demonstração):
 
-- **Aluno**: treino do dia, evolução (gráficos), agenda e chat.
-- **Personal Trainer**: dashboard, gestão de alunos, prescrição de treinos e agenda.
+- **Aluno**: treino do dia, evolução com gráficos, agenda, chat e área institucional.
+- **Personal**: dashboard, gestão de alunos, prescrição de treinos, agenda e área institucional.
 
-O login é mockado e apenas alterna o perfil. Não há backend ainda — os dados vêm de repositórios mock (`app/lib/data/repositories/`), desenhados como interfaces abstratas para troca futura pela API NestJS sem alterar a UI.
+**Fase 2 (preparada)** — backend 100% **Supabase**: scripts SQL com RLS multi-tenant prontos em [supabase/](supabase); o app ativa a integração via `--dart-define` (sem credenciais, continua nos mocks).
 
 ## Rodando
 
@@ -19,9 +19,17 @@ flutter pub get
 flutter run -d chrome
 ```
 
-## Roadmap (visão)
+## Documentação
 
-1. **Fase 1** — App Flutter mockado (atual)
-2. **Fase 2** — Backend NestJS + PostgreSQL multi-tenant, autenticação real
-3. **Fase 3** — Módulos Nutrição e Fisioterapia, dashboard executivo web
-4. **Fase 4** — Financeiro, CRM, White Label, IA de acompanhamento
+| | |
+|---|---|
+| [docs/visao-produto.md](docs/visao-produto.md) | Visão do produto, perfis, módulos, planos e roadmap |
+| [docs/arquitetura.md](docs/arquitetura.md) | Arquitetura frontend Flutter + Supabase |
+| [docs/modelo-de-dados.md](docs/modelo-de-dados.md) | Modelo de dados e estratégia multi-tenant (RLS) |
+| [docs/guia-dev.md](docs/guia-dev.md) | Como rodar, estrutura, convenções e ativação do Supabase |
+| [docs/politicas/](docs/politicas) | Política de privacidade, termos de uso e exclusão de conta |
+
+## Contato
+
+- Email: contatoflorestaja@hotmail.com
+- Telefone/WhatsApp: (87) 99971-0850
