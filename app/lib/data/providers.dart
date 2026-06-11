@@ -1,26 +1,31 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/app_config.dart';
 import '../core/models/models.dart';
 import 'repositories/mock_repositories.dart';
 import 'repositories/repositories.dart';
+import 'repositories/supabase_repositories.dart';
 
 // ------------------------------------------------------------- repositórios
-// Trocar estes providers pelas implementações HTTP quando o backend existir.
+// Com credenciais Supabase (--dart-define) usa o backend real; sem elas,
+// os mocks — a UI não percebe a diferença.
 
-final authRepositoryProvider =
-    Provider<AuthRepository>((ref) => MockAuthRepository());
-final alunoRepositoryProvider =
-    Provider<AlunoRepository>((ref) => MockAlunoRepository());
-final exercicioRepositoryProvider =
-    Provider<ExercicioRepository>((ref) => MockExercicioRepository());
-final treinoRepositoryProvider =
-    Provider<TreinoRepository>((ref) => MockTreinoRepository());
-final agendaRepositoryProvider =
-    Provider<AgendaRepository>((ref) => MockAgendaRepository());
-final chatRepositoryProvider =
-    Provider<ChatRepository>((ref) => MockChatRepository());
-final evolucaoRepositoryProvider =
-    Provider<EvolucaoRepository>((ref) => MockEvolucaoRepository());
+final _supabase = AppConfig.usarSupabase;
+
+final authRepositoryProvider = Provider<AuthRepository>(
+    (ref) => _supabase ? SupabaseAuthRepository() : MockAuthRepository());
+final alunoRepositoryProvider = Provider<AlunoRepository>(
+    (ref) => _supabase ? SupabaseAlunoRepository() : MockAlunoRepository());
+final exercicioRepositoryProvider = Provider<ExercicioRepository>((ref) =>
+    _supabase ? SupabaseExercicioRepository() : MockExercicioRepository());
+final treinoRepositoryProvider = Provider<TreinoRepository>(
+    (ref) => _supabase ? SupabaseTreinoRepository() : MockTreinoRepository());
+final agendaRepositoryProvider = Provider<AgendaRepository>(
+    (ref) => _supabase ? SupabaseAgendaRepository() : MockAgendaRepository());
+final chatRepositoryProvider = Provider<ChatRepository>(
+    (ref) => _supabase ? SupabaseChatRepository() : MockChatRepository());
+final evolucaoRepositoryProvider = Provider<EvolucaoRepository>((ref) =>
+    _supabase ? SupabaseEvolucaoRepository() : MockEvolucaoRepository());
 
 // -------------------------------------------------------------------- sessão
 
