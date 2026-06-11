@@ -30,6 +30,9 @@ abstract interface class AlunoRepository {
 abstract interface class ExercicioRepository {
   Future<List<Exercicio>> biblioteca();
   Exercicio porId(String id);
+
+  /// Define/atualiza o vídeo demonstrativo de um exercício.
+  Future<void> definirVideo(String exercicioId, String url);
 }
 
 abstract interface class TreinoRepository {
@@ -45,6 +48,11 @@ abstract interface class TreinoRepository {
 
   /// Histórico de conclusões, mais recentes primeiro.
   Future<List<TreinoConcluido>> historicoConcluidos(String alunoId);
+
+  // ----------------------------------------------------------- periodização
+
+  Future<List<Programa>> programas(String alunoId);
+  Future<void> salvarPrograma(Programa programa);
 }
 
 abstract interface class AgendaRepository {

@@ -113,43 +113,43 @@ class MockDatabase {
 
   // ----------------------------------------------------------- biblioteca
 
-  final List<Exercicio> exercicios = const [
+  final List<Exercicio> exercicios = [
     // Peito
-    Exercicio(id: 'e1', nome: 'Supino reto', grupoMuscular: 'Peito', equipamento: 'Barra'),
-    Exercicio(id: 'e2', nome: 'Supino inclinado', grupoMuscular: 'Peito', equipamento: 'Halteres'),
-    Exercicio(id: 'e3', nome: 'Crucifixo', grupoMuscular: 'Peito', equipamento: 'Halteres'),
-    Exercicio(id: 'e4', nome: 'Crossover', grupoMuscular: 'Peito', equipamento: 'Polia'),
+    const Exercicio(id: 'e1', nome: 'Supino reto', grupoMuscular: 'Peito', equipamento: 'Barra'),
+    const Exercicio(id: 'e2', nome: 'Supino inclinado', grupoMuscular: 'Peito', equipamento: 'Halteres'),
+    const Exercicio(id: 'e3', nome: 'Crucifixo', grupoMuscular: 'Peito', equipamento: 'Halteres'),
+    const Exercicio(id: 'e4', nome: 'Crossover', grupoMuscular: 'Peito', equipamento: 'Polia'),
     // Costas
-    Exercicio(id: 'e5', nome: 'Puxada frontal', grupoMuscular: 'Costas', equipamento: 'Polia'),
-    Exercicio(id: 'e6', nome: 'Remada curvada', grupoMuscular: 'Costas', equipamento: 'Barra'),
-    Exercicio(id: 'e7', nome: 'Remada baixa', grupoMuscular: 'Costas', equipamento: 'Polia'),
-    Exercicio(id: 'e8', nome: 'Barra fixa', grupoMuscular: 'Costas', equipamento: 'Peso corporal'),
+    const Exercicio(id: 'e5', nome: 'Puxada frontal', grupoMuscular: 'Costas', equipamento: 'Polia'),
+    const Exercicio(id: 'e6', nome: 'Remada curvada', grupoMuscular: 'Costas', equipamento: 'Barra'),
+    const Exercicio(id: 'e7', nome: 'Remada baixa', grupoMuscular: 'Costas', equipamento: 'Polia'),
+    const Exercicio(id: 'e8', nome: 'Barra fixa', grupoMuscular: 'Costas', equipamento: 'Peso corporal'),
     // Pernas
-    Exercicio(id: 'e9', nome: 'Agachamento livre', grupoMuscular: 'Pernas', equipamento: 'Barra'),
-    Exercicio(id: 'e10', nome: 'Leg press 45°', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
-    Exercicio(id: 'e11', nome: 'Cadeira extensora', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
-    Exercicio(id: 'e12', nome: 'Mesa flexora', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
-    Exercicio(id: 'e13', nome: 'Stiff', grupoMuscular: 'Pernas', equipamento: 'Barra'),
-    Exercicio(id: 'e14', nome: 'Panturrilha em pé', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
-    Exercicio(id: 'e15', nome: 'Avanço', grupoMuscular: 'Pernas', equipamento: 'Halteres'),
+    const Exercicio(id: 'e9', nome: 'Agachamento livre', grupoMuscular: 'Pernas', equipamento: 'Barra'),
+    const Exercicio(id: 'e10', nome: 'Leg press 45°', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
+    const Exercicio(id: 'e11', nome: 'Cadeira extensora', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
+    const Exercicio(id: 'e12', nome: 'Mesa flexora', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
+    const Exercicio(id: 'e13', nome: 'Stiff', grupoMuscular: 'Pernas', equipamento: 'Barra'),
+    const Exercicio(id: 'e14', nome: 'Panturrilha em pé', grupoMuscular: 'Pernas', equipamento: 'Máquina'),
+    const Exercicio(id: 'e15', nome: 'Avanço', grupoMuscular: 'Pernas', equipamento: 'Halteres'),
     // Ombros
-    Exercicio(id: 'e16', nome: 'Desenvolvimento militar', grupoMuscular: 'Ombros', equipamento: 'Barra'),
-    Exercicio(id: 'e17', nome: 'Elevação lateral', grupoMuscular: 'Ombros', equipamento: 'Halteres'),
-    Exercicio(id: 'e18', nome: 'Elevação frontal', grupoMuscular: 'Ombros', equipamento: 'Halteres'),
-    Exercicio(id: 'e19', nome: 'Encolhimento', grupoMuscular: 'Ombros', equipamento: 'Halteres'),
+    const Exercicio(id: 'e16', nome: 'Desenvolvimento militar', grupoMuscular: 'Ombros', equipamento: 'Barra'),
+    const Exercicio(id: 'e17', nome: 'Elevação lateral', grupoMuscular: 'Ombros', equipamento: 'Halteres'),
+    const Exercicio(id: 'e18', nome: 'Elevação frontal', grupoMuscular: 'Ombros', equipamento: 'Halteres'),
+    const Exercicio(id: 'e19', nome: 'Encolhimento', grupoMuscular: 'Ombros', equipamento: 'Halteres'),
     // Braços
-    Exercicio(id: 'e20', nome: 'Rosca direta', grupoMuscular: 'Bíceps', equipamento: 'Barra'),
-    Exercicio(id: 'e21', nome: 'Rosca alternada', grupoMuscular: 'Bíceps', equipamento: 'Halteres'),
-    Exercicio(id: 'e22', nome: 'Rosca martelo', grupoMuscular: 'Bíceps', equipamento: 'Halteres'),
-    Exercicio(id: 'e23', nome: 'Tríceps testa', grupoMuscular: 'Tríceps', equipamento: 'Barra'),
-    Exercicio(id: 'e24', nome: 'Tríceps corda', grupoMuscular: 'Tríceps', equipamento: 'Polia'),
-    Exercicio(id: 'e25', nome: 'Mergulho no banco', grupoMuscular: 'Tríceps', equipamento: 'Peso corporal'),
+    const Exercicio(id: 'e20', nome: 'Rosca direta', grupoMuscular: 'Bíceps', equipamento: 'Barra'),
+    const Exercicio(id: 'e21', nome: 'Rosca alternada', grupoMuscular: 'Bíceps', equipamento: 'Halteres'),
+    const Exercicio(id: 'e22', nome: 'Rosca martelo', grupoMuscular: 'Bíceps', equipamento: 'Halteres'),
+    const Exercicio(id: 'e23', nome: 'Tríceps testa', grupoMuscular: 'Tríceps', equipamento: 'Barra'),
+    const Exercicio(id: 'e24', nome: 'Tríceps corda', grupoMuscular: 'Tríceps', equipamento: 'Polia'),
+    const Exercicio(id: 'e25', nome: 'Mergulho no banco', grupoMuscular: 'Tríceps', equipamento: 'Peso corporal'),
     // Core / cardio
-    Exercicio(id: 'e26', nome: 'Prancha', grupoMuscular: 'Core', equipamento: 'Peso corporal'),
-    Exercicio(id: 'e27', nome: 'Abdominal infra', grupoMuscular: 'Core', equipamento: 'Peso corporal'),
-    Exercicio(id: 'e28', nome: 'Elevação de pernas', grupoMuscular: 'Core', equipamento: 'Peso corporal'),
-    Exercicio(id: 'e29', nome: 'Esteira (HIIT)', grupoMuscular: 'Cardio', equipamento: 'Esteira'),
-    Exercicio(id: 'e30', nome: 'Bicicleta ergométrica', grupoMuscular: 'Cardio', equipamento: 'Bicicleta'),
+    const Exercicio(id: 'e26', nome: 'Prancha', grupoMuscular: 'Core', equipamento: 'Peso corporal'),
+    const Exercicio(id: 'e27', nome: 'Abdominal infra', grupoMuscular: 'Core', equipamento: 'Peso corporal'),
+    const Exercicio(id: 'e28', nome: 'Elevação de pernas', grupoMuscular: 'Core', equipamento: 'Peso corporal'),
+    const Exercicio(id: 'e29', nome: 'Esteira (HIIT)', grupoMuscular: 'Cardio', equipamento: 'Esteira'),
+    const Exercicio(id: 'e30', nome: 'Bicicleta ergométrica', grupoMuscular: 'Cardio', equipamento: 'Bicicleta'),
   ];
 
   Exercicio exercicioPorId(String id) =>
@@ -404,6 +404,23 @@ class MockDatabase {
           SerieRealizada(indiceItem: 1, serie: 1, cargaKg: 24, repeticoes: 12),
         ],
       ),
+  ];
+
+  // ------------------------------------------------------------- programas
+
+  late final List<Programa> programas = [
+    Programa(
+      id: 'pg1',
+      alunoId: 'a1',
+      nome: 'Hipertrofia — Base',
+      objetivo: 'Hipertrofia',
+      macrociclo: 'Anual 2026',
+      mesociclo: 'Acumulação',
+      microciclo: 'Choque',
+      inicio: _diasAtras(21),
+      fim: _hoje.add(const Duration(days: 35)),
+      observacoes: 'Foco em volume; deload na última semana.',
+    ),
   ];
 
   // --------------------------------------------- avaliação profissional

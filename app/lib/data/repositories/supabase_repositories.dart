@@ -159,6 +159,7 @@ class SupabaseExercicioRepository implements ExercicioRepository {
           nome: l['nome'] as String,
           grupoMuscular: l['grupo_muscular'] as String,
           equipamento: l['equipamento'] as String,
+          videoUrl: (l['video_url'] as String?) ?? '',
         ),
     ];
     _cache..clear()..addEntries(lista.map((e) => MapEntry(e.id, e)));
@@ -170,6 +171,23 @@ class SupabaseExercicioRepository implements ExercicioRepository {
       _cache[id] ??
       Exercicio(
           id: id, nome: 'Exercício', grupoMuscular: '—', equipamento: '—');
+
+  @override
+  Future<void> definirVideo(String exercicioId, String url) async {
+    await _db
+        .from('exercicios')
+        .update({'video_url': url}).eq('id', exercicioId);
+    final atual = _cache[exercicioId];
+    if (atual != null) {
+      _cache[exercicioId] = Exercicio(
+        id: atual.id,
+        nome: atual.nome,
+        grupoMuscular: atual.grupoMuscular,
+        equipamento: atual.equipamento,
+        videoUrl: url,
+      );
+    }
+  }
 }
 
 class SupabaseTreinoRepository implements TreinoRepository {
@@ -189,6 +207,9 @@ class SupabaseTreinoRepository implements TreinoRepository {
               repeticoes: i['repeticoes'] as String,
               cargaKg: (i['carga_kg'] as num).toDouble(),
               descansoSeg: (i['descanso_seg'] as num).toInt(),
+              cadencia: (i['cadencia'] as String?) ?? '',
+              metodo: MetodoTreinoX.doBd(i['metodo'] as String?),
+              agrupamento: (i['agrupamento'] as num?)?.toInt() ?? 0,
             ),
         ],
       );
@@ -244,6 +265,9 @@ class SupabaseTreinoRepository implements TreinoRepository {
             'repeticoes': item.repeticoes,
             'carga_kg': item.cargaKg,
             'descanso_seg': item.descansoSeg,
+            'cadencia': item.cadencia,
+            'metodo': item.metodo.bd,
+            'agrupamento': item.agrupamento,
           },
       ]);
     }
@@ -284,6 +308,51 @@ class SupabaseTreinoRepository implements TreinoRepository {
             'repeticoes': s.repeticoes,
           },
       ]);
+    }
+  }
+
+  @override
+  Future<List<Programa>> programas(String alunoId) async {
+    final linhas = await _db
+        .from('programas')
+        .select()
+        .eq('aluno_id', await _resolveAlunoId(alunoId))
+        .order('inicio', ascending: false);
+    return [
+      for (final l in linhas)
+        Programa(
+          id: l['id'] as String,
+          alunoId: l['aluno_id'] as String,
+          nome: l['nome'] as String,
+          objetivo: l['objetivo'] as String,
+          inicio: DateTime.parse(l['inicio'] as String),
+          fim: DateTime.parse(l['fim'] as String),
+          macrociclo: l['macrociclo'] as String,
+          mesociclo: l['mesociclo'] as String,
+          microciclo: l['microciclo'] as String,
+          observacoes: l['observacoes'] as String,
+        ),
+    ];
+  }
+
+  @override
+  Future<void> salvarPrograma(Programa p) async {
+    final dados = {
+      'empresa_id': await _empresaDoUsuario(),
+      'aluno_id': p.alunoId,
+      'nome': p.nome,
+      'objetivo': p.objetivo,
+      'inicio': p.inicio.toIso8601String().substring(0, 10),
+      'fim': p.fim.toIso8601String().substring(0, 10),
+      'macrociclo': p.macrociclo,
+      'mesociclo': p.mesociclo,
+      'microciclo': p.microciclo,
+      'observacoes': p.observacoes,
+    };
+    if (p.id.startsWith('pg-novo-')) {
+      await _db.from('programas').insert(dados);
+    } else {
+      await _db.from('programas').update(dados).eq('id', p.id);
     }
   }
 

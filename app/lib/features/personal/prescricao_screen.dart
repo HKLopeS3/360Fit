@@ -232,6 +232,11 @@ class _ItemPrescricaoTile extends ConsumerWidget {
         ref.read(exercicioRepositoryProvider).porId(item.exercicioId);
     final carga =
         item.cargaKg > 0 ? ' · ${item.cargaKg.toStringAsFixed(0)} kg' : '';
+    final extras = [
+      if (item.cadencia.isNotEmpty) 'cad. ${item.cadencia}',
+      if (item.metodo != MetodoTreino.normal)
+        '${item.metodo.rotulo}${item.agrupamento > 0 ? ' #${item.agrupamento}' : ''}',
+    ].join(' · ');
     return Card(
       color: Colors.white,
       margin: const EdgeInsets.only(bottom: 10),
@@ -239,7 +244,9 @@ class _ItemPrescricaoTile extends ConsumerWidget {
         leading: const Icon(Icons.fitness_center),
         title: Text(exercicio.nome,
             style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text('${item.series}x ${item.repeticoes}$carga'),
+        subtitle: Text(
+            '${item.series}x ${item.repeticoes}$carga${extras.isEmpty ? '' : '\n$extras'}'),
+        isThreeLine: extras.isNotEmpty,
         onTap: aoEditar,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -271,6 +278,46 @@ class _SeletorExercicio extends ConsumerStatefulWidget {
 class _SeletorExercicioState extends ConsumerState<_SeletorExercicio> {
   String _busca = '';
   String? _grupo;
+
+  Future<void> _editarVideo(Exercicio e) async {
+    final controller = TextEditingController(text: e.videoUrl);
+    final url = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Vídeo — ${e.nome}'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'URL do vídeo (YouTube ou link direto)',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+    if (url == null) return;
+    await ref.read(exercicioRepositoryProvider).definirVideo(e.id, url);
+    ref.invalidate(bibliotecaExerciciosProvider);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(url.isEmpty
+                ? 'Vídeo removido.'
+                : 'Vídeo salvo para ${e.nome}!')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -336,6 +383,20 @@ class _SeletorExercicioState extends ConsumerState<_SeletorExercicio> {
                       leading: const Icon(Icons.fitness_center),
                       title: Text(e.nome),
                       subtitle: Text('${e.grupoMuscular} · ${e.equipamento}'),
+                      trailing: IconButton(
+                        tooltip: e.videoUrl.isEmpty
+                            ? 'Adicionar vídeo demonstrativo'
+                            : 'Vídeo cadastrado — editar',
+                        icon: Icon(
+                          e.videoUrl.isEmpty
+                              ? Icons.video_call_outlined
+                              : Icons.play_circle_fill,
+                          color: e.videoUrl.isEmpty
+                              ? null
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        onPressed: () => _editarVideo(e),
+                      ),
                       onTap: () => Navigator.of(context).pop(e),
                     );
                   },
@@ -364,11 +425,16 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
       TextEditingController(text: widget.item.repeticoes);
   late final TextEditingController _carga =
       TextEditingController(text: widget.item.cargaKg.toStringAsFixed(0));
+  late final TextEditingController _cadencia =
+      TextEditingController(text: widget.item.cadencia);
+  late MetodoTreino _metodo = widget.item.metodo;
+  late int _agrupamento = widget.item.agrupamento;
 
   @override
   void dispose() {
     _repeticoes.dispose();
     _carga.dispose();
+    _cadencia.dispose();
     super.dispose();
   }
 
@@ -414,6 +480,51 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
             keyboardType: TextInputType.number,
             decoration: const InputDecoration(labelText: 'Carga (kg)'),
           ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _cadencia,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Cadência (ex.: 4010)',
+              helperText: 'excêntrica · pausa · concêntrica · pausa',
+            ),
+          ),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<MetodoTreino>(
+            initialValue: _metodo,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Método'),
+            items: [
+              for (final m in MetodoTreino.values)
+                DropdownMenuItem(value: m, child: Text(m.rotulo)),
+            ],
+            onChanged: (m) =>
+                setState(() => _metodo = m ?? MetodoTreino.normal),
+          ),
+          if (_metodo == MetodoTreino.biSet) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(child: Text('Grupo do bi-set')),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: _agrupamento > 0
+                          ? () => setState(() => _agrupamento--)
+                          : null,
+                      icon: const Icon(Icons.remove_circle_outline),
+                    ),
+                    Text(_agrupamento == 0 ? '—' : '$_agrupamento'),
+                    IconButton(
+                      onPressed: () => setState(() => _agrupamento++),
+                      icon: const Icon(Icons.add_circle_outline),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ],
         ),
       ),
@@ -431,6 +542,10 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
                   : _repeticoes.text.trim(),
               cargaKg: double.tryParse(_carga.text.replaceAll(',', '.')) ??
                   widget.item.cargaKg,
+              cadencia: _cadencia.text.trim(),
+              metodo: _metodo,
+              agrupamento:
+                  _metodo == MetodoTreino.biSet ? _agrupamento : 0,
             ),
           ),
           child: const Text('Aplicar'),

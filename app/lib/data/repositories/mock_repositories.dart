@@ -65,6 +65,22 @@ class MockExercicioRepository implements ExercicioRepository {
 
   @override
   Exercicio porId(String id) => _db.exercicioPorId(id);
+
+  @override
+  Future<void> definirVideo(String exercicioId, String url) {
+    final i = _db.exercicios.indexWhere((e) => e.id == exercicioId);
+    if (i >= 0) {
+      final e = _db.exercicios[i];
+      _db.exercicios[i] = Exercicio(
+        id: e.id,
+        nome: e.nome,
+        grupoMuscular: e.grupoMuscular,
+        equipamento: e.equipamento,
+        videoUrl: url,
+      );
+    }
+    return _simulaRede(null);
+  }
 }
 
 class MockTreinoRepository implements TreinoRepository {
@@ -107,6 +123,23 @@ class MockTreinoRepository implements TreinoRepository {
         _db.treinosConcluidos.where((c) => c.alunoId == alunoId).toList()
           ..sort((a, b) => b.data.compareTo(a.data)),
       );
+
+  @override
+  Future<List<Programa>> programas(String alunoId) => _simulaRede(
+        _db.programas.where((p) => p.alunoId == alunoId).toList()
+          ..sort((a, b) => b.inicio.compareTo(a.inicio)),
+      );
+
+  @override
+  Future<void> salvarPrograma(Programa programa) {
+    final i = _db.programas.indexWhere((p) => p.id == programa.id);
+    if (i >= 0) {
+      _db.programas[i] = programa;
+    } else {
+      _db.programas.add(programa);
+    }
+    return _simulaRede(null);
+  }
 }
 
 class MockAgendaRepository implements AgendaRepository {

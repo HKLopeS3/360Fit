@@ -94,9 +94,37 @@ class _TreinoDoDia extends ConsumerWidget {
             c.data.day == hoje.day) ??
         false;
 
+    final programaVigente = ref
+        .watch(programasProvider(alunoLogadoId))
+        .valueOrNull
+        ?.where((p) => p.vigente)
+        .firstOrNull;
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        if (programaVigente != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.calendar_month, size: 16),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '${programaVigente.nome} · semana '
+                    '${programaVigente.semanaAtual} de '
+                    '${programaVigente.semanasTotais}'
+                    '${programaVigente.mesociclo.isNotEmpty ? ' · ${programaVigente.mesociclo}' : ''}',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
         // Cartão-resumo do treino
         Card(
           child: Container(

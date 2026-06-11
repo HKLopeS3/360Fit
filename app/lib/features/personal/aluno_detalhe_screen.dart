@@ -11,6 +11,7 @@ import 'comparativo_screen.dart';
 import 'form_aluno_screen.dart';
 import 'fotos_postura_screen.dart';
 import 'nova_avaliacao_screen.dart';
+import 'programa_widgets.dart';
 
 class AlunoDetalheScreen extends ConsumerWidget {
   const AlunoDetalheScreen({super.key, required this.alunoId});
@@ -106,6 +107,7 @@ class AlunoDetalheScreen extends ConsumerWidget {
                 icone: Icons.event_repeat,
               ),
             ),
+            ProgramaSection(alunoId: alunoId),
             const SectionTitle('Treinos prescritos'),
             AsyncView(
               value: treinosAsync,

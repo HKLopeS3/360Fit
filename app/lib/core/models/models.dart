@@ -86,12 +86,81 @@ class Exercicio {
     required this.nome,
     required this.grupoMuscular,
     required this.equipamento,
+    this.videoUrl = '',
   });
 
   final String id;
   final String nome;
   final String grupoMuscular;
   final String equipamento;
+
+  /// URL de vídeo demonstrativo (YouTube ou Storage).
+  final String videoUrl;
+}
+
+/// Métodos de intensificação aplicáveis a um item de treino.
+enum MetodoTreino { normal, biSet, dropSet, cluster, restPause }
+
+extension MetodoTreinoX on MetodoTreino {
+  String get rotulo => switch (this) {
+        MetodoTreino.normal => 'Normal',
+        MetodoTreino.biSet => 'Bi-set',
+        MetodoTreino.dropSet => 'Drop-set',
+        MetodoTreino.cluster => 'Cluster set',
+        MetodoTreino.restPause => 'Rest-pause',
+      };
+
+  String get bd => switch (this) {
+        MetodoTreino.normal => 'normal',
+        MetodoTreino.biSet => 'bi_set',
+        MetodoTreino.dropSet => 'drop_set',
+        MetodoTreino.cluster => 'cluster',
+        MetodoTreino.restPause => 'rest_pause',
+      };
+
+  static MetodoTreino doBd(String? valor) => MetodoTreino.values.firstWhere(
+        (m) => m.bd == valor,
+        orElse: () => MetodoTreino.normal,
+      );
+}
+
+/// Programa de treino periodizado (macro/meso/microciclo com vigência).
+class Programa {
+  const Programa({
+    required this.id,
+    required this.alunoId,
+    required this.nome,
+    required this.objetivo,
+    required this.inicio,
+    required this.fim,
+    this.macrociclo = '',
+    this.mesociclo = '',
+    this.microciclo = '',
+    this.observacoes = '',
+  });
+
+  final String id;
+  final String alunoId;
+  final String nome;
+  final String objetivo;
+  final DateTime inicio;
+  final DateTime fim;
+  final String macrociclo;
+  final String mesociclo;
+  final String microciclo;
+  final String observacoes;
+
+  int get semanasTotais =>
+      (fim.difference(inicio).inDays / 7).ceil().clamp(1, 520);
+
+  int get semanaAtual {
+    final dias = DateTime.now().difference(inicio).inDays;
+    return (dias / 7).floor().clamp(0, semanasTotais - 1) + 1;
+  }
+
+  bool get vigente =>
+      !DateTime.now().isBefore(inicio) &&
+      !DateTime.now().isAfter(fim.add(const Duration(days: 1)));
 }
 
 class ItemTreino {
@@ -101,6 +170,9 @@ class ItemTreino {
     required this.repeticoes,
     required this.cargaKg,
     this.descansoSeg = 60,
+    this.cadencia = '',
+    this.metodo = MetodoTreino.normal,
+    this.agrupamento = 0,
   });
 
   final String exercicioId;
@@ -109,18 +181,32 @@ class ItemTreino {
   final double cargaKg;
   final int descansoSeg;
 
+  /// Cadência excêntrica/pausa/concêntrica/pausa — ex.: "4010".
+  final String cadencia;
+  final MetodoTreino metodo;
+
+  /// Itens com o mesmo número (> 0) são executados em conjunto (bi-set…).
+  final int agrupamento;
+
   ItemTreino copyWith({
+    String? exercicioId,
     int? series,
     String? repeticoes,
     double? cargaKg,
     int? descansoSeg,
+    String? cadencia,
+    MetodoTreino? metodo,
+    int? agrupamento,
   }) {
     return ItemTreino(
-      exercicioId: exercicioId,
+      exercicioId: exercicioId ?? this.exercicioId,
       series: series ?? this.series,
       repeticoes: repeticoes ?? this.repeticoes,
       cargaKg: cargaKg ?? this.cargaKg,
       descansoSeg: descansoSeg ?? this.descansoSeg,
+      cadencia: cadencia ?? this.cadencia,
+      metodo: metodo ?? this.metodo,
+      agrupamento: agrupamento ?? this.agrupamento,
     );
   }
 }

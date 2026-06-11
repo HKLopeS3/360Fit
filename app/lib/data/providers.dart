@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/config/app_config.dart';
@@ -94,6 +95,10 @@ final treinoDoDiaProvider = FutureProvider<Treino?>(
     await ref.watch(bibliotecaExerciciosProvider.future);
     return ref.watch(treinoRepositoryProvider).treinoDoDia(alunoLogadoId);
   },
+);
+
+final programasProvider = FutureProvider.family<List<Programa>, String>(
+  (ref, alunoId) => ref.watch(treinoRepositoryProvider).programas(alunoId),
 );
 
 final historicoConcluidosProvider =
@@ -234,10 +239,30 @@ class ExecucaoSessaoNotifier extends Notifier<EstadoExecucao?> {
       if (restante <= 0) {
         timer.cancel();
         state = state?.copyWith(descansoRestante: 0);
+        // Avisa que o descanso acabou (vibração + som do sistema).
+        HapticFeedback.mediumImpact();
+        SystemSound.play(SystemSoundType.alert);
       } else {
         state = state?.copyWith(descansoRestante: restante);
       }
     });
+  }
+
+  /// Substitui o exercício corrente (aparelho ocupado) mantendo a prescrição.
+  void trocarExercicio(String novoExercicioId) {
+    final s = state;
+    if (s == null) return;
+    final itens = List.of(s.treino.itens);
+    itens[s.itemAtual] =
+        itens[s.itemAtual].copyWith(exercicioId: novoExercicioId);
+    state = EstadoExecucao(
+      treino: s.treino.copyWith(itens: itens),
+      inicio: s.inicio,
+      itemAtual: s.itemAtual,
+      serieAtual: s.serieAtual,
+      realizadas: s.realizadas,
+      descansoRestante: s.descansoRestante,
+    );
   }
 
   /// Encerra a sessão e persiste a conclusão.

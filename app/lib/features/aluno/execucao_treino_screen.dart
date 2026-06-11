@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
@@ -37,6 +38,58 @@ class _ExecucaoTreinoScreenState extends ConsumerState<ExecucaoTreinoScreen> {
         : sessao.item.cargaKg.toString();
     final faixa = RegExp(r'^(\d+)').firstMatch(sessao.item.repeticoes);
     _reps.text = faixa?.group(1) ?? '10';
+  }
+
+  Future<void> _trocarExercicio(EstadoExecucao sessao) async {
+    final atual = ref
+        .read(exercicioRepositoryProvider)
+        .porId(sessao.item.exercicioId);
+    final biblioteca =
+        await ref.read(exercicioRepositoryProvider).biblioteca();
+    if (!mounted) return;
+    final alternativas = biblioteca
+        .where((e) =>
+            e.grupoMuscular == atual.grupoMuscular && e.id != atual.id)
+        .toList();
+    if (alternativas.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Sem equivalentes para este grupo muscular.')),
+      );
+      return;
+    }
+    final escolhido = await showModalBottomSheet<Exercicio>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                'Equivalentes de ${atual.nome} (${atual.grupoMuscular})',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            for (final e in alternativas)
+              ListTile(
+                leading: const Icon(Icons.fitness_center),
+                title: Text(e.nome),
+                subtitle: Text(e.equipamento),
+                onTap: () => Navigator.of(context).pop(e),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (escolhido == null) return;
+    ref.read(execucaoSessaoProvider.notifier).trocarExercicio(escolhido.id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Trocado para ${escolhido.nome}!')),
+      );
+    }
   }
 
   void _concluirSerie(EstadoExecucao sessao) {
@@ -144,18 +197,41 @@ class _ExecucaoTreinoScreenState extends ConsumerState<ExecucaoTreinoScreen> {
                             letterSpacing: 1.2,
                             color: theme.colorScheme.primary)),
                     const SizedBox(height: 4),
-                    Text(
-                      exercicio.nome,
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            exercicio.nome,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ),
+                        if (exercicio.videoUrl.isNotEmpty)
+                          IconButton(
+                            tooltip: 'Ver vídeo demonstrativo',
+                            icon: Icon(Icons.play_circle_fill,
+                                color: theme.colorScheme.primary, size: 30),
+                            onPressed: () =>
+                                launchUrl(Uri.parse(exercicio.videoUrl)),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Série ${sessao.serieAtual} de ${sessao.item.series} · '
                       'alvo ${sessao.item.repeticoes} reps'
-                      '${sessao.item.cargaKg > 0 ? ' · ${sessao.item.cargaKg.toStringAsFixed(0)} kg' : ''}',
+                      '${sessao.item.cargaKg > 0 ? ' · ${sessao.item.cargaKg.toStringAsFixed(0)} kg' : ''}'
+                      '${sessao.item.cadencia.isNotEmpty ? ' · cad. ${sessao.item.cadencia}' : ''}'
+                      '${sessao.item.metodo != MetodoTreino.normal ? ' · ${sessao.item.metodo.rotulo}' : ''}',
+                      textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium,
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _trocarExercicio(sessao),
+                      icon: const Icon(Icons.swap_horiz, size: 18),
+                      label: const Text('Aparelho ocupado? Trocar'),
                     ),
                     const SizedBox(height: 20),
                     if (emDescanso)
