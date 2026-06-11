@@ -53,6 +53,14 @@ abstract interface class TreinoRepository {
 
   Future<List<Programa>> programas(String alunoId);
   Future<void> salvarPrograma(Programa programa);
+
+  // ------------------------------------------ visão da carteira (alertas)
+
+  /// Conclusões de todos os alunos visíveis nos últimos [dias].
+  Future<List<TreinoConcluido>> historicoEmpresa(int dias);
+
+  /// Programas de todos os alunos visíveis.
+  Future<List<Programa>> programasEmpresa();
 }
 
 abstract interface class AgendaRepository {

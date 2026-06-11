@@ -128,9 +128,21 @@ class _ExecucaoTreinoScreenState extends ConsumerState<ExecucaoTreinoScreen> {
       );
       if (continuar != true) return;
     }
+    if (!mounted) return;
+    // Feedback pós-treino: PSE (Borg) e dores.
+    final feedback = await showDialog<({int pse, bool dor, String relato})>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _FeedbackDialog(),
+    );
+    if (feedback == null) return;
     setState(() => _finalizando = true);
     final conclusao =
-        await ref.read(execucaoSessaoProvider.notifier).finalizar();
+        await ref.read(execucaoSessaoProvider.notifier).finalizar(
+              pse: feedback.pse,
+              dorArticular: feedback.dor,
+              dorRelato: feedback.relato,
+            );
     if (!mounted || conclusao == null) return;
     await showDialog<void>(
       context: context,
@@ -393,6 +405,103 @@ class _ProximoItem extends StatelessWidget {
                 fontWeight: atual ? FontWeight.w700 : FontWeight.w500)),
         trailing: Text('${item.series}x ${item.repeticoes}'),
       ),
+    );
+  }
+}
+
+/// PSE (Escala de Borg 0–10) + registro de dor pós-treino.
+class _FeedbackDialog extends StatefulWidget {
+  const _FeedbackDialog();
+
+  @override
+  State<_FeedbackDialog> createState() => _FeedbackDialogState();
+}
+
+class _FeedbackDialogState extends State<_FeedbackDialog> {
+  double _pse = 5;
+  bool _dor = false;
+  final _relato = TextEditingController();
+
+  static const _emojis = [
+    '😴', '😌', '🙂', '😊', '💪', '😅', '😓', '🥵', '😮‍💨', '🥶', '🤯', //
+  ];
+
+  @override
+  void dispose() {
+    _relato.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final emoji = _emojis[_pse.round().clamp(0, 10)];
+    return AlertDialog(
+      title: const Text('Como foi o treino?'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Esforço percebido (0 = muito leve · 10 = máximo)',
+              style: theme.textTheme.bodySmall,
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Slider(
+                    value: _pse,
+                    min: 0,
+                    max: 10,
+                    divisions: 10,
+                    label: _pse.round().toString(),
+                    onChanged: (v) => setState(() => _pse = v),
+                  ),
+                ),
+                Text('$emoji ${_pse.round()}',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800)),
+              ],
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Senti dor articular anormal'),
+              value: _dor,
+              activeTrackColor: theme.colorScheme.error,
+              onChanged: (v) => setState(() => _dor = v),
+            ),
+            if (_dor)
+              TextField(
+                controller: _relato,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: 'Onde e quando doeu?',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            if (_dor)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Seu personal será alertado sobre esta dor.',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(color: theme.colorScheme.error),
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop((
+            pse: _pse.round(),
+            dor: _dor,
+            relato: _relato.text.trim(),
+          )),
+          child: const Text('Enviar e finalizar'),
+        ),
+      ],
     );
   }
 }

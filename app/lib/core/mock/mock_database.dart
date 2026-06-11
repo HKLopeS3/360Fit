@@ -71,6 +71,8 @@ class MockDatabase {
       inicio: _diasAtras(60),
       frequenciaSemanal: 5,
       pesoAtualKg: 58.9,
+      nascimento: DateTime(2002, _hoje.add(const Duration(days: 3)).month,
+          _hoje.add(const Duration(days: 3)).day),
     ),
     Aluno(
       id: 'a5',
@@ -398,6 +400,9 @@ class MockDatabase {
         ][i % 3],
         data: _diasAtras(dias),
         duracaoMin: 48 + (i * 7) % 25,
+        pse: 4 + (i % 5),
+        dorArticular: i == 0,
+        dorRelato: i == 0 ? 'Incômodo no ombro direito no supino.' : '',
         series: const [
           SerieRealizada(indiceItem: 0, serie: 1, cargaKg: 70, repeticoes: 10),
           SerieRealizada(indiceItem: 0, serie: 2, cargaKg: 70, repeticoes: 9),

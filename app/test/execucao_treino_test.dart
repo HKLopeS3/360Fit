@@ -61,6 +61,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Finalizar treino incompleto?'), findsOneWidget);
     await tester.tap(find.text('Finalizar'));
+    await tester.pumpAndSettle();
+
+    // Feedback pós-treino: PSE + dor.
+    expect(find.text('Como foi o treino?'), findsOneWidget);
+    await tester.tap(find.text('Senti dor articular anormal'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+        find.byType(TextField).last, 'Ombro direito na última série');
+    await tester.tap(find.text('Enviar e finalizar'));
     await bombear(tester);
     expect(find.text('Treino concluído! 🎉'), findsOneWidget);
     expect(find.text('Volume total'), findsOneWidget);

@@ -140,6 +140,18 @@ class MockTreinoRepository implements TreinoRepository {
     }
     return _simulaRede(null);
   }
+
+  @override
+  Future<List<TreinoConcluido>> historicoEmpresa(int dias) {
+    final corte = DateTime.now().subtract(Duration(days: dias));
+    return _simulaRede(
+      _db.treinosConcluidos.where((c) => c.data.isAfter(corte)).toList(),
+    );
+  }
+
+  @override
+  Future<List<Programa>> programasEmpresa() =>
+      _simulaRede(List.of(_db.programas));
 }
 
 class MockAgendaRepository implements AgendaRepository {

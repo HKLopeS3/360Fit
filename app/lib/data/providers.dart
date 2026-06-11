@@ -97,6 +97,87 @@ final treinoDoDiaProvider = FutureProvider<Treino?>(
   },
 );
 
+/// Alerta acionável exibido no dashboard do personal.
+class AlertaPersonal {
+  const AlertaPersonal({
+    required this.tipo,
+    required this.titulo,
+    required this.detalhe,
+    this.alunoId,
+  });
+
+  /// 'dor' | 'sumido' | 'programa' | 'aniversario'
+  final String tipo;
+  final String titulo;
+  final String detalhe;
+  final String? alunoId;
+}
+
+final alertasProvider = FutureProvider<List<AlertaPersonal>>((ref) async {
+  final alunos = await ref.watch(alunosProvider.future);
+  final repo = ref.watch(treinoRepositoryProvider);
+  final concluidos = await repo.historicoEmpresa(30);
+  final programas = await repo.programasEmpresa();
+  final agora = DateTime.now();
+
+  String nome(String alunoId) => alunos
+      .where((a) => a.id == alunoId)
+      .map((a) => a.nome)
+      .firstOrNull ??
+      'Aluno';
+
+  final alertas = <AlertaPersonal>[
+    // 🔴 dor articular nos últimos 7 dias
+    for (final c in concluidos)
+      if (c.dorArticular && agora.difference(c.data).inDays <= 7)
+        AlertaPersonal(
+          tipo: 'dor',
+          titulo: '${nome(c.alunoId)} relatou dor articular',
+          detalhe:
+              '${c.dorRelato.isEmpty ? 'Sem detalhes' : c.dorRelato} · ${c.nomeTreino}',
+          alunoId: c.alunoId,
+        ),
+    // 🟠 sem treinar há 5+ dias
+    for (final a in alunos)
+      if (() {
+        final ultimo = concluidos
+            .where((c) => c.alunoId == a.id)
+            .map((c) => c.data)
+            .fold<DateTime?>(null,
+                (max, d) => max == null || d.isAfter(max) ? d : max);
+        return ultimo == null || agora.difference(ultimo).inDays >= 5;
+      }())
+        AlertaPersonal(
+          tipo: 'sumido',
+          titulo: '${a.nome} sem treinar há 5+ dias',
+          detalhe: 'Que tal mandar uma mensagem?',
+          alunoId: a.id,
+        ),
+    // 🟡 programas vencendo em até 7 dias
+    for (final p in programas)
+      if (p.vigente && p.fim.difference(agora).inDays <= 7)
+        AlertaPersonal(
+          tipo: 'programa',
+          titulo: 'Programa de ${nome(p.alunoId)} vence em breve',
+          detalhe:
+              '${p.nome} termina em ${p.fim.difference(agora).inDays} dia(s) — planeje o próximo ciclo',
+          alunoId: p.alunoId,
+        ),
+    // 🎂 aniversários nos próximos 7 dias
+    for (final a in alunos)
+      if (a.diasParaAniversario != null && a.diasParaAniversario! <= 7)
+        AlertaPersonal(
+          tipo: 'aniversario',
+          titulo: a.diasParaAniversario == 0
+              ? 'Hoje é aniversário de ${a.nome}! 🎉'
+              : 'Aniversário de ${a.nome} em ${a.diasParaAniversario} dia(s)',
+          detalhe: 'Uma mensagem faz diferença na retenção.',
+          alunoId: a.id,
+        ),
+  ];
+  return alertas;
+});
+
 final programasProvider = FutureProvider.family<List<Programa>, String>(
   (ref, alunoId) => ref.watch(treinoRepositoryProvider).programas(alunoId),
 );
@@ -265,8 +346,12 @@ class ExecucaoSessaoNotifier extends Notifier<EstadoExecucao?> {
     );
   }
 
-  /// Encerra a sessão e persiste a conclusão.
-  Future<TreinoConcluido?> finalizar() async {
+  /// Encerra a sessão e persiste a conclusão (com feedback do aluno).
+  Future<TreinoConcluido?> finalizar({
+    int pse = 0,
+    bool dorArticular = false,
+    String dorRelato = '',
+  }) async {
     final s = state;
     if (s == null) return null;
     _cronometro?.cancel();
@@ -279,6 +364,9 @@ class ExecucaoSessaoNotifier extends Notifier<EstadoExecucao?> {
       duracaoMin:
           DateTime.now().difference(s.inicio).inMinutes.clamp(1, 600),
       series: s.realizadas,
+      pse: pse,
+      dorArticular: dorArticular,
+      dorRelato: dorRelato,
     );
     await ref.read(treinoRepositoryProvider).concluirTreino(conclusao);
     ref.invalidate(historicoConcluidosProvider(s.treino.alunoId));

@@ -70,6 +70,58 @@ class DashboardScreen extends ConsumerWidget {
                   icone: Icons.fitness_center,
                 ),
               ),
+              const SectionTitle('Alertas'),
+              Consumer(builder: (context, ref, _) {
+                final alertasAsync = ref.watch(alertasProvider);
+                return AsyncView(
+                  value: alertasAsync,
+                  builder: (alertas) {
+                    if (alertas.isEmpty) {
+                      return const Card(
+                        color: Colors.white,
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text('Tudo em dia — nenhum alerta. ✅'),
+                        ),
+                      );
+                    }
+                    const icones = {
+                      'dor': ('🔴', Icons.healing),
+                      'sumido': ('🟠', Icons.hourglass_bottom),
+                      'programa': ('🟡', Icons.event_repeat),
+                      'aniversario': ('🎂', Icons.cake),
+                    };
+                    return Column(
+                      children: [
+                        for (final alerta in alertas.take(8))
+                          Card(
+                            color: Colors.white,
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: ListTile(
+                              leading: Text(
+                                icones[alerta.tipo]?.$1 ?? '🔔',
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                              title: Text(alerta.titulo,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                              subtitle: Text(alerta.detalhe,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis),
+                              trailing: alerta.alunoId == null
+                                  ? null
+                                  : const Icon(Icons.chevron_right),
+                              onTap: alerta.alunoId == null
+                                  ? null
+                                  : () => context.go(
+                                      '/personal/alunos/${alerta.alunoId}'),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              }),
               const SectionTitle('Treinos realizados — últimos 7 dias'),
               Card(
                 color: Colors.white,

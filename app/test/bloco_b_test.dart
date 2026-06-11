@@ -125,6 +125,9 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Tatiane Moraes'), findsOneWidget);
+    // Drena os timers do provider de alertas (recarregado pelo cadastro).
+    await tester.pump(const Duration(milliseconds: 800));
+    await tester.pumpAndSettle();
   });
 
   testWidgets('aluno registra peso e vê notificações', (tester) async {

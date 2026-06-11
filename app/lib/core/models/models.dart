@@ -34,10 +34,26 @@ class Aluno {
     required this.pesoAtualKg,
     this.riscoEvasao = false,
     this.sexo = 'masculino',
+    this.nascimento,
   });
 
   /// 'masculino' | 'feminino' — usado pelos protocolos de avaliação.
   final String sexo;
+
+  /// Data de nascimento (alertas de aniversário no dashboard).
+  final DateTime? nascimento;
+
+  /// Dias até o próximo aniversário (0 = hoje); null sem nascimento.
+  int? get diasParaAniversario {
+    final n = nascimento;
+    if (n == null) return null;
+    final hoje = DateTime.now();
+    var proximo = DateTime(hoje.year, n.month, n.day);
+    if (proximo.isBefore(DateTime(hoje.year, hoje.month, hoje.day))) {
+      proximo = DateTime(hoje.year + 1, n.month, n.day);
+    }
+    return proximo.difference(DateTime(hoje.year, hoje.month, hoje.day)).inDays;
+  }
 
   Aluno copyWith({
     String? nome,
@@ -47,6 +63,7 @@ class Aluno {
     double? pesoAtualKg,
     bool? riscoEvasao,
     String? sexo,
+    DateTime? nascimento,
   }) {
     return Aluno(
       id: id,
@@ -58,6 +75,7 @@ class Aluno {
       pesoAtualKg: pesoAtualKg ?? this.pesoAtualKg,
       riscoEvasao: riscoEvasao ?? this.riscoEvasao,
       sexo: sexo ?? this.sexo,
+      nascimento: nascimento ?? this.nascimento,
     );
   }
 
@@ -427,6 +445,9 @@ class TreinoConcluido {
     required this.data,
     required this.duracaoMin,
     required this.series,
+    this.pse = 0,
+    this.dorArticular = false,
+    this.dorRelato = '',
   });
 
   final String id;
@@ -436,6 +457,11 @@ class TreinoConcluido {
   final DateTime data;
   final int duracaoMin;
   final List<SerieRealizada> series;
+
+  /// Percepção subjetiva de esforço — Escala de Borg (0–10).
+  final int pse;
+  final bool dorArticular;
+  final String dorRelato;
 
   /// Soma de carga × repetições de todas as séries (kg).
   double get volumeTotalKg => series.fold(

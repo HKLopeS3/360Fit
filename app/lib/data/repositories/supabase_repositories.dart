@@ -94,6 +94,9 @@ class SupabaseAlunoRepository implements AlunoRepository {
         pesoAtualKg: (l['peso_atual_kg'] as num?)?.toDouble() ?? 0,
         riscoEvasao: l['risco_evasao'] as bool,
         sexo: (l['sexo'] as String?) ?? 'masculino',
+        nascimento: l['nascimento'] == null
+            ? null
+            : DateTime.parse(l['nascimento'] as String),
       );
 
   @override
@@ -117,6 +120,7 @@ class SupabaseAlunoRepository implements AlunoRepository {
         'peso_atual_kg': a.pesoAtualKg,
         'risco_evasao': a.riscoEvasao,
         'sexo': a.sexo,
+        'nascimento': a.nascimento?.toIso8601String().substring(0, 10),
       };
 
   @override
@@ -294,6 +298,9 @@ class SupabaseTreinoRepository implements TreinoRepository {
           'nome_treino': conclusao.nomeTreino,
           'data': conclusao.data.toIso8601String(),
           'duracao_min': conclusao.duracaoMin,
+          'pse': conclusao.pse,
+          'dor_articular': conclusao.dorArticular,
+          'dor_relato': conclusao.dorRelato,
         })
         .select('id')
         .single();
@@ -356,6 +363,27 @@ class SupabaseTreinoRepository implements TreinoRepository {
     }
   }
 
+  TreinoConcluido _mapearConclusao(Map<String, dynamic> l) => TreinoConcluido(
+        id: l['id'] as String,
+        alunoId: l['aluno_id'] as String,
+        treinoId: (l['treino_id'] as String?) ?? '',
+        nomeTreino: l['nome_treino'] as String,
+        data: DateTime.parse(l['data'] as String).toLocal(),
+        duracaoMin: (l['duracao_min'] as num).toInt(),
+        pse: (l['pse'] as num?)?.toInt() ?? 0,
+        dorArticular: (l['dor_articular'] as bool?) ?? false,
+        dorRelato: (l['dor_relato'] as String?) ?? '',
+        series: [
+          for (final s in (l['series_realizadas'] as List? ?? []))
+            SerieRealizada(
+              indiceItem: (s['indice_item'] as num).toInt(),
+              serie: (s['serie'] as num).toInt(),
+              cargaKg: (s['carga_kg'] as num).toDouble(),
+              repeticoes: (s['repeticoes'] as num).toInt(),
+            ),
+        ],
+      );
+
   @override
   Future<List<TreinoConcluido>> historicoConcluidos(String alunoId) async {
     final linhas = await _db
@@ -363,24 +391,38 @@ class SupabaseTreinoRepository implements TreinoRepository {
         .select('*, series_realizadas(*)')
         .eq('aluno_id', await _resolveAlunoId(alunoId))
         .order('data', ascending: false);
+    return [for (final l in linhas) _mapearConclusao(l)];
+  }
+
+  @override
+  Future<List<TreinoConcluido>> historicoEmpresa(int dias) async {
+    final corte =
+        DateTime.now().subtract(Duration(days: dias)).toIso8601String();
+    final linhas = await _db
+        .from('treinos_concluidos')
+        .select()
+        .gte('data', corte)
+        .order('data', ascending: false);
+    return [for (final l in linhas) _mapearConclusao(l)];
+  }
+
+  @override
+  Future<List<Programa>> programasEmpresa() async {
+    final linhas =
+        await _db.from('programas').select().order('fim', ascending: true);
     return [
       for (final l in linhas)
-        TreinoConcluido(
+        Programa(
           id: l['id'] as String,
           alunoId: l['aluno_id'] as String,
-          treinoId: (l['treino_id'] as String?) ?? '',
-          nomeTreino: l['nome_treino'] as String,
-          data: DateTime.parse(l['data'] as String).toLocal(),
-          duracaoMin: (l['duracao_min'] as num).toInt(),
-          series: [
-            for (final s in (l['series_realizadas'] as List? ?? []))
-              SerieRealizada(
-                indiceItem: (s['indice_item'] as num).toInt(),
-                serie: (s['serie'] as num).toInt(),
-                cargaKg: (s['carga_kg'] as num).toDouble(),
-                repeticoes: (s['repeticoes'] as num).toInt(),
-              ),
-          ],
+          nome: l['nome'] as String,
+          objetivo: l['objetivo'] as String,
+          inicio: DateTime.parse(l['inicio'] as String),
+          fim: DateTime.parse(l['fim'] as String),
+          macrociclo: l['macrociclo'] as String,
+          mesociclo: l['mesociclo'] as String,
+          microciclo: l['microciclo'] as String,
+          observacoes: l['observacoes'] as String,
         ),
     ];
   }
