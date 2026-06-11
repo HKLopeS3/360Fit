@@ -74,6 +74,40 @@ class SupabaseAlunoRepository implements AlunoRepository {
         await _db.from('alunos').select().eq('id', await _resolveAlunoId(id)).single();
     return _mapear(l);
   }
+
+  Map<String, dynamic> _paraLinha(Aluno a) => {
+        'nome': a.nome,
+        'idade': a.idade,
+        'objetivo': a.objetivo,
+        'frequencia_semanal': a.frequenciaSemanal,
+        'peso_atual_kg': a.pesoAtualKg,
+        'risco_evasao': a.riscoEvasao,
+      };
+
+  @override
+  Future<Aluno> criar(Aluno aluno) async {
+    final perfil = await _db
+        .from('perfis')
+        .select('empresa_id')
+        .eq('id', _db.auth.currentUser!.id)
+        .single();
+    final l = await _db
+        .from('alunos')
+        .insert({
+          ..._paraLinha(aluno),
+          'empresa_id': perfil['empresa_id'],
+          'profissional_id': _db.auth.currentUser!.id,
+          'inicio': aluno.inicio.toIso8601String().substring(0, 10),
+        })
+        .select()
+        .single();
+    return _mapear(l);
+  }
+
+  @override
+  Future<void> atualizar(Aluno aluno) async {
+    await _db.from('alunos').update(_paraLinha(aluno)).eq('id', aluno.id);
+  }
 }
 
 class SupabaseExercicioRepository implements ExercicioRepository {
@@ -269,8 +303,51 @@ class SupabaseAgendaRepository implements AgendaRepository {
           tipo: TipoAgendamento.values.byName(l['tipo'] as String),
           dataHora: DateTime.parse(l['data_hora'] as String).toLocal(),
           local: l['local'] as String,
+          status: StatusAgendamento.values
+              .byName((l['status'] as String?) ?? 'pendente'),
         ),
     ];
+  }
+
+  @override
+  Future<void> criar(Agendamento agendamento) async {
+    final perfil = await _db
+        .from('perfis')
+        .select('empresa_id')
+        .eq('id', _db.auth.currentUser!.id)
+        .single();
+    await _db.from('agendamentos').insert({
+      'empresa_id': perfil['empresa_id'],
+      'aluno_id': agendamento.alunoId,
+      'profissional_id': _db.auth.currentUser!.id,
+      'titulo': agendamento.titulo,
+      'tipo': agendamento.tipo.name,
+      'data_hora': agendamento.dataHora.toIso8601String(),
+      'local': agendamento.local,
+      'status': agendamento.status.name,
+    });
+  }
+
+  @override
+  Future<void> remarcar(String id, DateTime novaDataHora) async {
+    await _db.from('agendamentos').update({
+      'data_hora': novaDataHora.toIso8601String(),
+      'status': StatusAgendamento.pendente.name,
+    }).eq('id', id);
+  }
+
+  @override
+  Future<void> cancelar(String id) async {
+    await _db
+        .from('agendamentos')
+        .update({'status': StatusAgendamento.cancelado.name}).eq('id', id);
+  }
+
+  @override
+  Future<void> confirmarPresenca(String id) async {
+    await _db
+        .from('agendamentos')
+        .update({'status': StatusAgendamento.confirmado.name}).eq('id', id);
   }
 }
 

@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/config/contato.dart';
+import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import '../aluno/perfil_screen.dart';
 import 'politicas_conteudo.dart';
 
 Future<void> _abrirEmail(BuildContext context, {String? assunto}) async {
@@ -63,8 +65,19 @@ class MaisScreen extends ConsumerWidget {
                   ),
                   title: Text(sessao.nome,
                       style: const TextStyle(fontWeight: FontWeight.w700)),
-                  subtitle: Text(sessao.email,
-                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                    sessao.perfil == PerfilUsuario.aluno
+                        ? '${sessao.email}\nToque para ver e editar seu perfil'
+                        : sessao.email,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: sessao.perfil == PerfilUsuario.aluno
+                      ? const Icon(Icons.chevron_right)
+                      : null,
+                  onTap: sessao.perfil == PerfilUsuario.aluno
+                      ? () => abrir(const PerfilAlunoScreen())
+                      : null,
                 ),
               ),
             const SectionTitle('Suporte'),

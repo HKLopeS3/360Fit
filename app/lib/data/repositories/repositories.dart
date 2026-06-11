@@ -12,6 +12,8 @@ abstract interface class AuthRepository {
 abstract interface class AlunoRepository {
   Future<List<Aluno>> listar();
   Future<Aluno> buscar(String id);
+  Future<Aluno> criar(Aluno aluno);
+  Future<void> atualizar(Aluno aluno);
 }
 
 abstract interface class ExercicioRepository {
@@ -37,6 +39,16 @@ abstract interface class TreinoRepository {
 abstract interface class AgendaRepository {
   /// Agendamentos futuros; filtra por aluno quando [alunoId] é informado.
   Future<List<Agendamento>> proximos({String? alunoId});
+
+  Future<void> criar(Agendamento agendamento);
+
+  /// Remarca o horário (volta o status para pendente).
+  Future<void> remarcar(String id, DateTime novaDataHora);
+
+  Future<void> cancelar(String id);
+
+  /// Aluno confirma presença.
+  Future<void> confirmarPresenca(String id);
 }
 
 abstract interface class ChatRepository {

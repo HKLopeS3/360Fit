@@ -51,6 +51,8 @@ flutter run --dart-define=SUPABASE_URL=https://xxxx.supabase.co --dart-define=SU
 
 Sem as credenciais o app funciona integralmente com mocks — útil para demos, testes e desenvolvimento offline. A troca acontece apenas nos providers; **nenhuma tela muda**.
 
+Fluxos de escrita (concluir treino, salvar avaliação, criar/cancelar agendamento, cadastrar aluno, registrar peso) seguem o mesmo padrão: a tela chama o repositório e invalida os providers afetados (`ref.invalidate(...)`) para a UI recarregar. Nos mocks a escrita é em memória (`MockDatabase.instance`) e **não persiste entre recargas da página** — comportamento esperado da Fase 1.
+
 ## Multi-tenancy
 
 Isolamento por linha (*row-level*): toda tabela de negócio tem `empresa_id`, e políticas **RLS** (Row Level Security) garantem que cada requisição só enxerga dados da empresa do usuário autenticado e conforme o seu papel. Detalhes em [modelo-de-dados.md](modelo-de-dados.md).

@@ -75,7 +75,7 @@ Ecossistema completo de saúde e performance conectando academias, profissionais
 
 ## Roadmap
 
-1. **Fase 1 (atual)** — App Flutter com dados mockados (Aluno + Personal) para validação de UX.
+1. **Fase 1 (atual)** — App Flutter com dados mockados (Aluno + Personal). Entregue: execução guiada de treino com cronômetro e histórico/calendário de frequência; avaliações físicas com medidas e comparativo de evolução; agenda interativa (criar/remarcar/cancelar/confirmar presença); cadastro e edição de alunos; perfil do aluno com registro rápido de peso; notificações in-app; área institucional e políticas das lojas. *Os dados mock vivem em memória — não persistem entre recargas; persistência real chega com o Supabase.*
 2. **Fase 2** — Backend **Supabase**: Auth, PostgreSQL com RLS multi-tenant, Realtime (chat) e Storage. Ver [arquitetura.md](arquitetura.md).
 3. **Fase 3** — Módulos Nutrição e Fisioterapia, dashboard executivo, perfil Admin da Empresa.
 4. **Fase 4** — Financeiro, CRM, White Label, IA, publicação nas lojas.

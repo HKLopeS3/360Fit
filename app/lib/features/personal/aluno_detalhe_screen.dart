@@ -7,6 +7,7 @@ import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import '../aluno/chat_screen.dart';
 import 'comparativo_screen.dart';
+import 'form_aluno_screen.dart';
 import 'nova_avaliacao_screen.dart';
 
 class AlunoDetalheScreen extends ConsumerWidget {
@@ -21,7 +22,23 @@ class AlunoDetalheScreen extends ConsumerWidget {
     final avaliacoesAsync = ref.watch(avaliacoesProvider(alunoId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Perfil do aluno')),
+      appBar: AppBar(
+        title: const Text('Perfil do aluno'),
+        actions: [
+          IconButton(
+            tooltip: 'Editar dados',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () {
+              final aluno = alunoAsync.valueOrNull;
+              if (aluno == null) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                    builder: (_) => FormAlunoScreen(aluno: aluno)),
+              );
+            },
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(

@@ -24,6 +24,19 @@ class MockAlunoRepository implements AlunoRepository {
   @override
   Future<Aluno> buscar(String id) =>
       _simulaRede(_db.alunos.firstWhere((a) => a.id == id));
+
+  @override
+  Future<Aluno> criar(Aluno aluno) {
+    _db.alunos.add(aluno);
+    return _simulaRede(aluno);
+  }
+
+  @override
+  Future<void> atualizar(Aluno aluno) {
+    final i = _db.alunos.indexWhere((a) => a.id == aluno.id);
+    if (i >= 0) _db.alunos[i] = aluno;
+    return _simulaRede(null);
+  }
 }
 
 class MockExercicioRepository implements ExercicioRepository {
@@ -90,6 +103,38 @@ class MockAgendaRepository implements AgendaRepository {
         .toList()
       ..sort((a, b) => a.dataHora.compareTo(b.dataHora));
     return _simulaRede(lista);
+  }
+
+  @override
+  Future<void> criar(Agendamento agendamento) {
+    _db.agendamentos.add(agendamento);
+    return _simulaRede(null);
+  }
+
+  void _trocar(String id, Agendamento Function(Agendamento) transforma) {
+    final i = _db.agendamentos.indexWhere((a) => a.id == id);
+    if (i >= 0) _db.agendamentos[i] = transforma(_db.agendamentos[i]);
+  }
+
+  @override
+  Future<void> remarcar(String id, DateTime novaDataHora) {
+    _trocar(
+        id,
+        (a) => a.copyWith(
+            dataHora: novaDataHora, status: StatusAgendamento.pendente));
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<void> cancelar(String id) {
+    _trocar(id, (a) => a.copyWith(status: StatusAgendamento.cancelado));
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<void> confirmarPresenca(String id) {
+    _trocar(id, (a) => a.copyWith(status: StatusAgendamento.confirmado));
+    return _simulaRede(null);
   }
 }
 

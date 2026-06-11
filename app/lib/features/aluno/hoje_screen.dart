@@ -6,6 +6,7 @@ import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import 'execucao_treino_screen.dart';
+import 'notificacoes.dart';
 
 class HojeScreen extends ConsumerWidget {
   const HojeScreen({super.key});
@@ -33,7 +34,7 @@ class HojeScreen extends ConsumerWidget {
           ],
         ),
         toolbarHeight: 72,
-        actions: const [LogoutButton()],
+        actions: const [SinoNotificacoes(), LogoutButton()],
       ),
       body: PaginaCentralizada(
         child: AsyncView(

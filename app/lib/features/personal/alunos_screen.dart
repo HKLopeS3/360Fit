@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/theme/brand_theme.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import 'form_aluno_screen.dart';
 
 class AlunosScreen extends ConsumerStatefulWidget {
   const AlunosScreen({super.key});
@@ -24,6 +25,13 @@ class _AlunosScreenState extends ConsumerState<AlunosScreen> {
       appBar: AppBar(
         title: const Text('Meus alunos'),
         actions: const [LogoutButton()],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const FormAlunoScreen()),
+        ),
+        icon: const Icon(Icons.person_add),
+        label: const Text('Novo aluno'),
       ),
       body: PaginaCentralizada(
         child: Column(

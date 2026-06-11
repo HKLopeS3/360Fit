@@ -45,7 +45,7 @@ Convenções: código e identificadores de domínio em pt-BR (`Treino`, `alunoId
 ## Ativando o Supabase (Fase 2)
 
 1. Crie um projeto em [supabase.com](https://supabase.com) (região São Paulo).
-2. No **SQL Editor**, execute na ordem os arquivos de [`supabase/migrations/`](../supabase/migrations/) e depois [`supabase/seed.sql`](../supabase/seed.sql).
+2. No **SQL Editor**, execute na ordem os arquivos de [`supabase/migrations/`](../supabase/migrations/) (0001 a 0005) e depois [`supabase/seed.sql`](../supabase/seed.sql).
 3. Em *Project Settings → API*, copie a **URL** e a **anon key**.
 4. Rode com:
 

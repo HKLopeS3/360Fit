@@ -35,6 +35,26 @@ class Aluno {
     this.riscoEvasao = false,
   });
 
+  Aluno copyWith({
+    String? nome,
+    int? idade,
+    String? objetivo,
+    int? frequenciaSemanal,
+    double? pesoAtualKg,
+    bool? riscoEvasao,
+  }) {
+    return Aluno(
+      id: id,
+      nome: nome ?? this.nome,
+      idade: idade ?? this.idade,
+      objetivo: objetivo ?? this.objetivo,
+      inicio: inicio,
+      frequenciaSemanal: frequenciaSemanal ?? this.frequenciaSemanal,
+      pesoAtualKg: pesoAtualKg ?? this.pesoAtualKg,
+      riscoEvasao: riscoEvasao ?? this.riscoEvasao,
+    );
+  }
+
   final String id;
   final String nome;
   final int idade;
@@ -130,6 +150,8 @@ class Treino {
 
 enum TipoAgendamento { treino, avaliacao, consulta }
 
+enum StatusAgendamento { pendente, confirmado, cancelado }
+
 class Agendamento {
   const Agendamento({
     required this.id,
@@ -138,6 +160,7 @@ class Agendamento {
     required this.tipo,
     required this.dataHora,
     required this.local,
+    this.status = StatusAgendamento.pendente,
   });
 
   final String id;
@@ -146,6 +169,19 @@ class Agendamento {
   final TipoAgendamento tipo;
   final DateTime dataHora;
   final String local;
+  final StatusAgendamento status;
+
+  Agendamento copyWith({DateTime? dataHora, StatusAgendamento? status}) {
+    return Agendamento(
+      id: id,
+      alunoId: alunoId,
+      titulo: titulo,
+      tipo: tipo,
+      dataHora: dataHora ?? this.dataHora,
+      local: local,
+      status: status ?? this.status,
+    );
+  }
 }
 
 class Mensagem {

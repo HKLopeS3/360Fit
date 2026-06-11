@@ -23,9 +23,11 @@ alunos   1──n avaliacoes_fisicas / registros_peso / registros_carga
 | `exercicios` | id, empresa_id?, nome, grupo_muscular, equipamento | `empresa_id` nulo = biblioteca global da plataforma |
 | `treinos` | id, empresa_id, aluno_id, nome, foco, dias_semana int[] | |
 | `treino_itens` | treino_id, exercicio_id, ordem, series, repeticoes, carga_kg, descanso_seg | |
-| `agendamentos` | id, empresa_id, aluno_id, profissional_id, tipo, data_hora, local | `tipo`: treino, avaliacao, consulta |
+| `agendamentos` | id, empresa_id, aluno_id, profissional_id, tipo, data_hora, local, **status** | `tipo`: treino/avaliacao/consulta; `status`: pendente/confirmado/cancelado (migration 0005) |
 | `mensagens` | id, empresa_id, aluno_id, autor_perfil_id, texto, criada_em | Realtime habilitado |
-| `avaliacoes_fisicas` | id, empresa_id, aluno_id, data, peso_kg, gordura_pct, massa_magra_kg | Dado sensível de saúde |
+| `avaliacoes_fisicas` | id, empresa_id, aluno_id, data, peso_kg, gordura_pct, massa_magra_kg, **medidas jsonb**, **observacoes** | Dado sensível de saúde; medidas = circunferências em cm |
+| `treinos_concluidos` | id, empresa_id, aluno_id, treino_id, nome_treino, data, duracao_min | Execuções registradas pelo aluno (migration 0004) |
+| `series_realizadas` | conclusao_id, indice_item, serie, carga_kg, repeticoes | Séries efetivamente feitas em cada conclusão |
 | `registros_peso` | id, empresa_id, aluno_id, data, peso_kg | |
 | `registros_carga` | id, empresa_id, aluno_id, exercicio_id, data, carga_kg | |
 
@@ -43,7 +45,7 @@ Regras por papel (aplicadas em todas as tabelas de negócio):
 
 | Papel | Leitura | Escrita |
 |---|---|---|
-| aluno | apenas linhas do próprio `aluno_id` | mensagens próprias; check-in de treino (futuro) |
+| aluno | apenas linhas do próprio `aluno_id` | mensagens próprias; conclusão de treino e séries; registro do próprio peso; confirmação de presença em agendamento |
 | profissional | linhas de alunos com `profissional_id = auth.uid()` | treinos, agendamentos, avaliações, mensagens dos seus alunos |
 | admin_empresa | tudo da `empresa_id` dele | tudo da empresa (inclusive alunos e equipe) |
 | super_admin | global (via `service_role`, fora do app) | global |
