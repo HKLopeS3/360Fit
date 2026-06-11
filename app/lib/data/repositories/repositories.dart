@@ -26,6 +26,12 @@ abstract interface class TreinoRepository {
   Future<Treino?> treinoDoDia(String alunoId);
 
   Future<void> salvar(Treino treino);
+
+  /// Registra a conclusão de um treino executado pelo aluno.
+  Future<void> concluirTreino(TreinoConcluido conclusao);
+
+  /// Histórico de conclusões, mais recentes primeiro.
+  Future<List<TreinoConcluido>> historicoConcluidos(String alunoId);
 }
 
 abstract interface class AgendaRepository {
@@ -46,4 +52,10 @@ abstract interface class EvolucaoRepository {
   Future<List<RegistroPeso>> pesos(String alunoId);
   Future<List<AvaliacaoFisica>> avaliacoes(String alunoId);
   Future<List<RegistroCarga>> cargas(String alunoId, String exercicioId);
+
+  /// Salva uma nova avaliação física (também registra o peso da data).
+  Future<void> salvarAvaliacao(String alunoId, AvaliacaoFisica avaliacao);
+
+  /// Registro rápido de peso pelo aluno ou profissional.
+  Future<void> registrarPeso(String alunoId, double pesoKg);
 }

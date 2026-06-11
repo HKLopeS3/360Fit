@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../app/theme/brand_theme.dart';
-import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import '../aluno/chat_screen.dart';
+import 'comparativo_screen.dart';
+import 'nova_avaliacao_screen.dart';
 
 class AlunoDetalheScreen extends ConsumerWidget {
   const AlunoDetalheScreen({super.key, required this.alunoId});
@@ -100,11 +101,42 @@ class AlunoDetalheScreen extends ConsumerWidget {
                     )
                   : Column(
                       children: [
-                        for (final t in treinos) _TreinoResumo(treino: t),
+                        for (final t in treinos) TreinoResumoCard(treino: t),
                       ],
                     ),
             ),
-            const SectionTitle('Avaliações físicas'),
+            SectionTitle(
+              'Avaliações físicas',
+              trailing: TextButton.icon(
+                onPressed: () {
+                  final aluno = alunoAsync.valueOrNull;
+                  if (aluno == null) return;
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ComparativoScreen(
+                          alunoId: alunoId, nomeAluno: aluno.primeiroNome),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.compare_arrows, size: 18),
+                label: const Text('Comparar'),
+              ),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: () {
+                final aluno = alunoAsync.valueOrNull;
+                if (aluno == null) return;
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => NovaAvaliacaoScreen(
+                        alunoId: alunoId, nomeAluno: aluno.primeiroNome),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Nova avaliação'),
+            ),
+            const SizedBox(height: 10),
             AsyncView(
               value: avaliacoesAsync,
               builder: (avaliacoes) => avaliacoes.isEmpty
@@ -126,7 +158,10 @@ class AlunoDetalheScreen extends ConsumerWidget {
                               title: Text(
                                   '${a.pesoKg.toStringAsFixed(1)} kg · ${a.gorduraPct.toStringAsFixed(1)}% gordura'),
                               subtitle: Text(
-                                  'Massa magra ${a.massaMagraKg.toStringAsFixed(1)} kg · ${fmtDiaMes.format(a.data)}/${a.data.year}'),
+                                'Massa magra ${a.massaMagraKg.toStringAsFixed(1)} kg · ${fmtDiaMes.format(a.data)}/${a.data.year}'
+                                '${a.medidas.isEmpty ? '' : '\n${a.medidas.entries.map((m) => '${m.key} ${m.value.toStringAsFixed(0)}cm').join(' · ')}'}',
+                              ),
+                              isThreeLine: a.medidas.isNotEmpty,
                             ),
                           ),
                       ],
@@ -140,44 +175,3 @@ class AlunoDetalheScreen extends ConsumerWidget {
   }
 }
 
-class _TreinoResumo extends ConsumerWidget {
-  const _TreinoResumo({required this.treino});
-
-  final Treino treino;
-
-  static const _dias = {
-    DateTime.monday: 'Seg',
-    DateTime.tuesday: 'Ter',
-    DateTime.wednesday: 'Qua',
-    DateTime.thursday: 'Qui',
-    DateTime.friday: 'Sex',
-    DateTime.saturday: 'Sáb',
-    DateTime.sunday: 'Dom',
-  };
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final exercicios = ref.read(exercicioRepositoryProvider);
-    return Card(
-      color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 10),
-      child: ExpansionTile(
-        shape: const Border(),
-        title: Text('${treino.nome} — ${treino.foco}',
-            style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(
-          '${treino.itens.length} exercícios · ${treino.diasSemana.map((d) => _dias[d]).join(', ')}',
-        ),
-        children: [
-          for (final item in treino.itens)
-            ListTile(
-              dense: true,
-              leading: const Icon(Icons.fitness_center, size: 18),
-              title: Text(exercicios.porId(item.exercicioId).nome),
-              trailing: Text('${item.series}x ${item.repeticoes}'),
-            ),
-        ],
-      ),
-    );
-  }
-}

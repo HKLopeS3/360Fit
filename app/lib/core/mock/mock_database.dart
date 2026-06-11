@@ -381,6 +381,31 @@ class MockDatabase {
           exercicioId: 'e9', data: _diasAtras((5 - i) * 30), cargaKg: c),
   ];
 
+  // -------------------------------------------------- treinos concluídos
+
+  /// Histórico de execuções do Carlos (a1) — alimenta o calendário de
+  /// frequência e a lista de conclusões.
+  late final List<TreinoConcluido> treinosConcluidos = [
+    for (final (i, dias) in [2, 3, 5, 7, 9, 10, 12, 14, 16, 17].indexed)
+      TreinoConcluido(
+        id: 'tc${i + 1}',
+        alunoId: 'a1',
+        treinoId: 't${(i % 3) + 1}',
+        nomeTreino: const [
+          'Treino A — Peito e Tríceps',
+          'Treino B — Costas e Bíceps',
+          'Treino C — Pernas e Ombros',
+        ][i % 3],
+        data: _diasAtras(dias),
+        duracaoMin: 48 + (i * 7) % 25,
+        series: const [
+          SerieRealizada(indiceItem: 0, serie: 1, cargaKg: 70, repeticoes: 10),
+          SerieRealizada(indiceItem: 0, serie: 2, cargaKg: 70, repeticoes: 9),
+          SerieRealizada(indiceItem: 1, serie: 1, cargaKg: 24, repeticoes: 12),
+        ],
+      ),
+  ];
+
   // ---------------------------------------------------- frequência (semana)
 
   /// Treinos concluídos por dia nos últimos 7 dias (para o dashboard).

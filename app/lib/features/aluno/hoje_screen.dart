@@ -5,6 +5,7 @@ import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import 'execucao_treino_screen.dart';
 
 class HojeScreen extends ConsumerWidget {
   const HojeScreen({super.key});
@@ -81,6 +82,16 @@ class _TreinoDoDia extends ConsumerWidget {
     final progresso =
         treino.itens.isEmpty ? 0.0 : concluidos.length / treino.itens.length;
     final exercicios = ref.read(exercicioRepositoryProvider);
+    final historicoAsync =
+        ref.watch(historicoConcluidosProvider(alunoLogadoId));
+    final treinosAsync = ref.watch(treinosDoAlunoProvider(alunoLogadoId));
+
+    final hoje = DateTime.now();
+    final concluidoHoje = historicoAsync.valueOrNull?.any((c) =>
+            c.data.year == hoje.year &&
+            c.data.month == hoje.month &&
+            c.data.day == hoje.day) ??
+        false;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -112,24 +123,59 @@ class _TreinoDoDia extends ConsumerWidget {
                       ?.copyWith(color: Colors.white70),
                 ),
                 const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: progresso,
-                    minHeight: 8,
-                    backgroundColor: Colors.white24,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Colors.white),
+                if (concluidoHoje)
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle, color: Colors.white),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Treino concluído hoje! 🎉',
+                          style: theme.textTheme.titleSmall
+                              ?.copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  FilledButton.icon(
+                    onPressed: () {
+                      ref
+                          .read(execucaoSessaoProvider.notifier)
+                          .iniciar(treino);
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const ExecucaoTreinoScreen(),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('Iniciar treino'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: theme.colorScheme.primary,
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  progresso == 1.0
-                      ? 'Treino concluído! 🎉'
-                      : '${concluidos.length} de ${treino.itens.length} concluídos',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: Colors.white),
-                ),
+                if (!concluidoHoje && concluidos.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progresso,
+                      minHeight: 8,
+                      backgroundColor: Colors.white24,
+                      valueColor:
+                          const AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${concluidos.length} de ${treino.itens.length} marcados',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: Colors.white),
+                  ),
+                ],
               ],
             ),
           ),
@@ -144,6 +190,15 @@ class _TreinoDoDia extends ConsumerWidget {
                 .read(execucaoTreinoProvider.notifier)
                 .alternar(treino.id, i),
           ),
+        const SectionTitle('Meus treinos'),
+        AsyncView(
+          value: treinosAsync,
+          builder: (treinos) => Column(
+            children: [
+              for (final t in treinos) TreinoResumoCard(treino: t),
+            ],
+          ),
+        ),
       ],
     );
   }

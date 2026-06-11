@@ -188,6 +188,64 @@ class SupabaseTreinoRepository implements TreinoRepository {
         .single();
     return l['empresa_id'] as String;
   }
+
+  @override
+  Future<void> concluirTreino(TreinoConcluido conclusao) async {
+    final alunoId = await _resolveAlunoId(conclusao.alunoId);
+    final criado = await _db
+        .from('treinos_concluidos')
+        .insert({
+          'empresa_id': await _empresaDoUsuario(),
+          'aluno_id': alunoId,
+          'treino_id': conclusao.treinoId,
+          'nome_treino': conclusao.nomeTreino,
+          'data': conclusao.data.toIso8601String(),
+          'duracao_min': conclusao.duracaoMin,
+        })
+        .select('id')
+        .single();
+    if (conclusao.series.isNotEmpty) {
+      await _db.from('series_realizadas').insert([
+        for (final s in conclusao.series)
+          {
+            'conclusao_id': criado['id'],
+            'indice_item': s.indiceItem,
+            'serie': s.serie,
+            'carga_kg': s.cargaKg,
+            'repeticoes': s.repeticoes,
+          },
+      ]);
+    }
+  }
+
+  @override
+  Future<List<TreinoConcluido>> historicoConcluidos(String alunoId) async {
+    final linhas = await _db
+        .from('treinos_concluidos')
+        .select('*, series_realizadas(*)')
+        .eq('aluno_id', await _resolveAlunoId(alunoId))
+        .order('data', ascending: false);
+    return [
+      for (final l in linhas)
+        TreinoConcluido(
+          id: l['id'] as String,
+          alunoId: l['aluno_id'] as String,
+          treinoId: (l['treino_id'] as String?) ?? '',
+          nomeTreino: l['nome_treino'] as String,
+          data: DateTime.parse(l['data'] as String).toLocal(),
+          duracaoMin: (l['duracao_min'] as num).toInt(),
+          series: [
+            for (final s in (l['series_realizadas'] as List? ?? []))
+              SerieRealizada(
+                indiceItem: (s['indice_item'] as num).toInt(),
+                serie: (s['serie'] as num).toInt(),
+                cargaKg: (s['carga_kg'] as num).toDouble(),
+                repeticoes: (s['repeticoes'] as num).toInt(),
+              ),
+          ],
+        ),
+    ];
+  }
 }
 
 class SupabaseAgendaRepository implements AgendaRepository {
@@ -309,6 +367,12 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
           pesoKg: (l['peso_kg'] as num).toDouble(),
           gorduraPct: (l['gordura_pct'] as num?)?.toDouble() ?? 0,
           massaMagraKg: (l['massa_magra_kg'] as num?)?.toDouble() ?? 0,
+          medidas: {
+            for (final MapEntry(:key, :value)
+                in ((l['medidas'] as Map?) ?? const {}).entries)
+              key as String: (value as num).toDouble(),
+          },
+          observacoes: (l['observacoes'] as String?) ?? '',
         ),
     ];
   }
@@ -329,5 +393,45 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
           cargaKg: (l['carga_kg'] as num).toDouble(),
         ),
     ];
+  }
+
+  Future<String> _empresa() async {
+    final l = await _db
+        .from('perfis')
+        .select('empresa_id')
+        .eq('id', _db.auth.currentUser!.id)
+        .single();
+    return l['empresa_id'] as String;
+  }
+
+  @override
+  Future<void> salvarAvaliacao(String alunoId, AvaliacaoFisica a) async {
+    final id = await _resolveAlunoId(alunoId);
+    final empresa = await _empresa();
+    await _db.from('avaliacoes_fisicas').insert({
+      'empresa_id': empresa,
+      'aluno_id': id,
+      'data': a.data.toIso8601String().substring(0, 10),
+      'peso_kg': a.pesoKg,
+      'gordura_pct': a.gorduraPct,
+      'massa_magra_kg': a.massaMagraKg,
+      'medidas': a.medidas,
+      'observacoes': a.observacoes,
+    });
+    await _db.from('registros_peso').insert({
+      'empresa_id': empresa,
+      'aluno_id': id,
+      'data': a.data.toIso8601String().substring(0, 10),
+      'peso_kg': a.pesoKg,
+    });
+  }
+
+  @override
+  Future<void> registrarPeso(String alunoId, double pesoKg) async {
+    await _db.from('registros_peso').insert({
+      'empresa_id': await _empresa(),
+      'aluno_id': await _resolveAlunoId(alunoId),
+      'peso_kg': pesoKg,
+    });
   }
 }

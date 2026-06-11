@@ -179,12 +179,62 @@ class AvaliacaoFisica {
     required this.pesoKg,
     required this.gorduraPct,
     required this.massaMagraKg,
+    this.medidas = const {},
+    this.observacoes = '',
   });
 
   final DateTime data;
   final double pesoKg;
   final double gorduraPct;
   final double massaMagraKg;
+
+  /// Circunferências em cm — chaves padrão: 'Braço', 'Cintura',
+  /// 'Quadril', 'Coxa'.
+  final Map<String, double> medidas;
+  final String observacoes;
+}
+
+/// Uma série efetivamente executada durante um treino.
+class SerieRealizada {
+  const SerieRealizada({
+    required this.indiceItem,
+    required this.serie,
+    required this.cargaKg,
+    required this.repeticoes,
+  });
+
+  /// Índice do exercício dentro de `Treino.itens`.
+  final int indiceItem;
+
+  /// Número da série (1..n).
+  final int serie;
+  final double cargaKg;
+  final int repeticoes;
+}
+
+/// Registro de um treino concluído pelo aluno.
+class TreinoConcluido {
+  const TreinoConcluido({
+    required this.id,
+    required this.alunoId,
+    required this.treinoId,
+    required this.nomeTreino,
+    required this.data,
+    required this.duracaoMin,
+    required this.series,
+  });
+
+  final String id;
+  final String alunoId;
+  final String treinoId;
+  final String nomeTreino; // ex.: "Treino A — Peito e Tríceps"
+  final DateTime data;
+  final int duracaoMin;
+  final List<SerieRealizada> series;
+
+  /// Soma de carga × repetições de todas as séries (kg).
+  double get volumeTotalKg => series.fold(
+      0, (total, s) => total + s.cargaKg * s.repeticoes);
 }
 
 /// Evolução de carga em um exercício-chave (ex.: supino, agachamento).

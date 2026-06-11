@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../core/models/models.dart';
 import '../data/providers.dart';
 
 /// Botão de sair usado nas AppBars de ambos os perfis.
@@ -179,6 +180,51 @@ class MetricCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Card expansível com o resumo de um treino (usado no detalhe do aluno
+/// e na seção "Meus treinos" da aba Hoje).
+class TreinoResumoCard extends ConsumerWidget {
+  const TreinoResumoCard({super.key, required this.treino});
+
+  final Treino treino;
+
+  static const _dias = {
+    DateTime.monday: 'Seg',
+    DateTime.tuesday: 'Ter',
+    DateTime.wednesday: 'Qua',
+    DateTime.thursday: 'Qui',
+    DateTime.friday: 'Sex',
+    DateTime.saturday: 'Sáb',
+    DateTime.sunday: 'Dom',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final exercicios = ref.read(exercicioRepositoryProvider);
+    return Card(
+      color: Colors.white,
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ExpansionTile(
+        shape: const Border(),
+        title: Text('${treino.nome} — ${treino.foco}',
+            style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(
+          '${treino.itens.length} exercícios · '
+          '${treino.diasSemana.map((d) => _dias[d]).join(', ')}',
+        ),
+        children: [
+          for (final item in treino.itens)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.fitness_center, size: 18),
+              title: Text(exercicios.porId(item.exercicioId).nome),
+              trailing: Text('${item.series}x ${item.repeticoes}'),
+            ),
+        ],
       ),
     );
   }

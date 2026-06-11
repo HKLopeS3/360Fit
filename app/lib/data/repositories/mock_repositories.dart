@@ -63,6 +63,19 @@ class MockTreinoRepository implements TreinoRepository {
     }
     return _simulaRede(null);
   }
+
+  @override
+  Future<void> concluirTreino(TreinoConcluido conclusao) {
+    _db.treinosConcluidos.add(conclusao);
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<List<TreinoConcluido>> historicoConcluidos(String alunoId) =>
+      _simulaRede(
+        _db.treinosConcluidos.where((c) => c.alunoId == alunoId).toList()
+          ..sort((a, b) => b.data.compareTo(a.data)),
+      );
 }
 
 class MockAgendaRepository implements AgendaRepository {
@@ -123,4 +136,19 @@ class MockEvolucaoRepository implements EvolucaoRepository {
       _simulaRede(
         _db.cargas.where((c) => c.exercicioId == exercicioId).toList(),
       );
+
+  @override
+  Future<void> salvarAvaliacao(String alunoId, AvaliacaoFisica avaliacao) {
+    (_db.avaliacoes[alunoId] ??= []).add(avaliacao);
+    (_db.pesos[alunoId] ??= [])
+        .add(RegistroPeso(data: avaliacao.data, pesoKg: avaliacao.pesoKg));
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<void> registrarPeso(String alunoId, double pesoKg) {
+    (_db.pesos[alunoId] ??= [])
+        .add(RegistroPeso(data: DateTime.now(), pesoKg: pesoKg));
+    return _simulaRede(null);
+  }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import 'historico_screen.dart';
 
 class EvolucaoScreen extends ConsumerWidget {
   const EvolucaoScreen({super.key});
@@ -19,7 +20,16 @@ class EvolucaoScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minha evolução'),
-        actions: const [LogoutButton()],
+        actions: [
+          IconButton(
+            tooltip: 'Histórico de treinos',
+            icon: const Icon(Icons.history),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const HistoricoScreen()),
+            ),
+          ),
+          const LogoutButton(),
+        ],
       ),
       body: PaginaCentralizada(
         child: ListView(

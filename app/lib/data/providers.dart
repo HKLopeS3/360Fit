@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/config/app_config.dart';
@@ -70,6 +72,12 @@ final treinoDoDiaProvider = FutureProvider<Treino?>(
   (ref) => ref.watch(treinoRepositoryProvider).treinoDoDia(alunoLogadoId),
 );
 
+final historicoConcluidosProvider =
+    FutureProvider.family<List<TreinoConcluido>, String>(
+  (ref, alunoId) =>
+      ref.watch(treinoRepositoryProvider).historicoConcluidos(alunoId),
+);
+
 final agendaProvider = FutureProvider.family<List<Agendamento>, String?>(
   (ref, alunoId) =>
       ref.watch(agendaRepositoryProvider).proximos(alunoId: alunoId),
@@ -89,6 +97,145 @@ final cargasProvider =
       .watch(evolucaoRepositoryProvider)
       .cargas(args.alunoId, args.exercicioId),
 );
+
+// ------------------------------------------------- sessão de execução ao vivo
+
+/// Estado de um treino em andamento (tela de execução).
+class EstadoExecucao {
+  const EstadoExecucao({
+    required this.treino,
+    required this.inicio,
+    this.itemAtual = 0,
+    this.serieAtual = 1,
+    this.realizadas = const [],
+    this.descansoRestante = 0,
+  });
+
+  final Treino treino;
+  final DateTime inicio;
+
+  /// Índice do exercício corrente em `treino.itens`.
+  final int itemAtual;
+
+  /// Série corrente (1-based) do exercício corrente.
+  final int serieAtual;
+  final List<SerieRealizada> realizadas;
+
+  /// Segundos restantes de descanso; 0 = nenhum descanso ativo.
+  final int descansoRestante;
+
+  ItemTreino get item => treino.itens[itemAtual];
+  bool get ultimaSerieDoTreino =>
+      itemAtual == treino.itens.length - 1 && serieAtual == item.series;
+  int get totalSeries =>
+      treino.itens.fold(0, (total, i) => total + i.series);
+
+  EstadoExecucao copyWith({
+    int? itemAtual,
+    int? serieAtual,
+    List<SerieRealizada>? realizadas,
+    int? descansoRestante,
+  }) {
+    return EstadoExecucao(
+      treino: treino,
+      inicio: inicio,
+      itemAtual: itemAtual ?? this.itemAtual,
+      serieAtual: serieAtual ?? this.serieAtual,
+      realizadas: realizadas ?? this.realizadas,
+      descansoRestante: descansoRestante ?? this.descansoRestante,
+    );
+  }
+}
+
+class ExecucaoSessaoNotifier extends Notifier<EstadoExecucao?> {
+  Timer? _cronometro;
+
+  @override
+  EstadoExecucao? build() {
+    ref.onDispose(() => _cronometro?.cancel());
+    return null;
+  }
+
+  void iniciar(Treino treino) {
+    _cronometro?.cancel();
+    state = EstadoExecucao(treino: treino, inicio: DateTime.now());
+  }
+
+  /// Conclui a série corrente e avança (com descanso quando há próxima).
+  void concluirSerie({required double cargaKg, required int repeticoes}) {
+    final s = state;
+    if (s == null) return;
+    final realizadas = [
+      ...s.realizadas,
+      SerieRealizada(
+        indiceItem: s.itemAtual,
+        serie: s.serieAtual,
+        cargaKg: cargaKg,
+        repeticoes: repeticoes,
+      ),
+    ];
+    if (s.ultimaSerieDoTreino) {
+      state = s.copyWith(realizadas: realizadas, descansoRestante: 0);
+      return;
+    }
+    final proximaEhMesmoExercicio = s.serieAtual < s.item.series;
+    state = s.copyWith(
+      realizadas: realizadas,
+      itemAtual: proximaEhMesmoExercicio ? s.itemAtual : s.itemAtual + 1,
+      serieAtual: proximaEhMesmoExercicio ? s.serieAtual + 1 : 1,
+      descansoRestante: s.item.descansoSeg,
+    );
+    _iniciarDescanso();
+  }
+
+  void pularDescanso() {
+    _cronometro?.cancel();
+    state = state?.copyWith(descansoRestante: 0);
+  }
+
+  void _iniciarDescanso() {
+    _cronometro?.cancel();
+    _cronometro = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final restante = (state?.descansoRestante ?? 0) - 1;
+      if (restante <= 0) {
+        timer.cancel();
+        state = state?.copyWith(descansoRestante: 0);
+      } else {
+        state = state?.copyWith(descansoRestante: restante);
+      }
+    });
+  }
+
+  /// Encerra a sessão e persiste a conclusão.
+  Future<TreinoConcluido?> finalizar() async {
+    final s = state;
+    if (s == null) return null;
+    _cronometro?.cancel();
+    final conclusao = TreinoConcluido(
+      id: 'tc-${DateTime.now().millisecondsSinceEpoch}',
+      alunoId: s.treino.alunoId,
+      treinoId: s.treino.id,
+      nomeTreino: '${s.treino.nome} — ${s.treino.foco}',
+      data: DateTime.now(),
+      duracaoMin:
+          DateTime.now().difference(s.inicio).inMinutes.clamp(1, 600),
+      series: s.realizadas,
+    );
+    await ref.read(treinoRepositoryProvider).concluirTreino(conclusao);
+    ref.invalidate(historicoConcluidosProvider(s.treino.alunoId));
+    state = null;
+    return conclusao;
+  }
+
+  void descartar() {
+    _cronometro?.cancel();
+    state = null;
+  }
+}
+
+final execucaoSessaoProvider =
+    NotifierProvider<ExecucaoSessaoNotifier, EstadoExecucao?>(
+        ExecucaoSessaoNotifier.new);
 
 // ----------------------------------------------------------- execução treino
 
