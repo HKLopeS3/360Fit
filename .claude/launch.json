@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fit360-web",
+      "runtimeExecutable": "C:\\dev\\flutter\\bin\\flutter.bat",
+      "runtimeArgs": ["run", "-d", "web-server", "--release", "--web-port=8077"],
+      "cwd": "app",
+      "port": 8077
+    }
+  ]
+}
