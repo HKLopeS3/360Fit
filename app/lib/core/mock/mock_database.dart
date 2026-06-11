@@ -406,6 +406,11 @@ class MockDatabase {
       ),
   ];
 
+  // --------------------------------------------- avaliação profissional
+
+  final List<Anamnese> anamneses = [];
+  final List<FotoAluno> fotosPostura = [];
+
   // ---------------------------------------------------- frequência (semana)
 
   /// Treinos concluídos por dia nos últimos 7 dias (para o dashboard).

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -92,6 +93,7 @@ class SupabaseAlunoRepository implements AlunoRepository {
         frequenciaSemanal: (l['frequencia_semanal'] as num).toInt(),
         pesoAtualKg: (l['peso_atual_kg'] as num?)?.toDouble() ?? 0,
         riscoEvasao: l['risco_evasao'] as bool,
+        sexo: (l['sexo'] as String?) ?? 'masculino',
       );
 
   @override
@@ -114,6 +116,7 @@ class SupabaseAlunoRepository implements AlunoRepository {
         'frequencia_semanal': a.frequenciaSemanal,
         'peso_atual_kg': a.pesoAtualKg,
         'risco_evasao': a.riscoEvasao,
+        'sexo': a.sexo,
       };
 
   @override
@@ -517,15 +520,23 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
           pesoKg: (l['peso_kg'] as num).toDouble(),
           gorduraPct: (l['gordura_pct'] as num?)?.toDouble() ?? 0,
           massaMagraKg: (l['massa_magra_kg'] as num?)?.toDouble() ?? 0,
-          medidas: {
-            for (final MapEntry(:key, :value)
-                in ((l['medidas'] as Map?) ?? const {}).entries)
-              key as String: (value as num).toDouble(),
-          },
+          medidas: _mapaNum(l['medidas']),
           observacoes: (l['observacoes'] as String?) ?? '',
+          pro: AvaliacaoPro(
+            protocolo: (l['protocolo'] as String?) ?? '',
+            dobras: _mapaNum(l['dobras']),
+            bioimpedancia: _mapaNum(l['bioimpedancia']),
+            testes: _mapaNum(l['testes']),
+          ),
         ),
     ];
   }
+
+  Map<String, double> _mapaNum(Object? json) => {
+        for (final MapEntry(:key, :value)
+            in ((json as Map?) ?? const {}).entries)
+          key as String: (value as num).toDouble(),
+      };
 
   @override
   Future<List<RegistroCarga>> cargas(String alunoId, String exercicioId) async {
@@ -567,6 +578,10 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
       'massa_magra_kg': a.massaMagraKg,
       'medidas': a.medidas,
       'observacoes': a.observacoes,
+      'protocolo': a.pro.protocolo,
+      'dobras': a.pro.dobras,
+      'bioimpedancia': a.pro.bioimpedancia,
+      'testes': a.pro.testes,
     });
     await _db.from('registros_peso').insert({
       'empresa_id': empresa,
@@ -583,5 +598,84 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
       'aluno_id': await _resolveAlunoId(alunoId),
       'peso_kg': pesoKg,
     });
+  }
+
+  @override
+  Future<void> salvarAnamnese(Anamnese a) async {
+    await _db.from('anamneses').insert({
+      'empresa_id': await _empresa(),
+      'aluno_id': a.alunoId,
+      'data': a.data.toIso8601String().substring(0, 10),
+      'parq': a.parq,
+      'lesoes': a.lesoes,
+      'cirurgias': a.cirurgias,
+      'medicamentos': a.medicamentos,
+      'horas_sono': a.horasSono,
+      'habitos': a.habitos,
+    });
+  }
+
+  @override
+  Future<Anamnese?> ultimaAnamnese(String alunoId) async {
+    final linhas = await _db
+        .from('anamneses')
+        .select()
+        .eq('aluno_id', await _resolveAlunoId(alunoId))
+        .order('data', ascending: false)
+        .limit(1);
+    if (linhas.isEmpty) return null;
+    final l = linhas.first;
+    return Anamnese(
+      alunoId: l['aluno_id'] as String,
+      data: DateTime.parse(l['data'] as String),
+      parq: [for (final r in l['parq'] as List) r as bool],
+      lesoes: l['lesoes'] as String,
+      cirurgias: l['cirurgias'] as String,
+      medicamentos: l['medicamentos'] as String,
+      horasSono: (l['horas_sono'] as num).toInt(),
+      habitos: l['habitos'] as String,
+    );
+  }
+
+  @override
+  Future<void> salvarFotoPostura({
+    required String alunoId,
+    required AnguloFoto angulo,
+    required List<int> bytes,
+  }) async {
+    final empresa = await _empresa();
+    final caminho =
+        '$empresa/$alunoId/${DateTime.now().millisecondsSinceEpoch}-${angulo.name}.jpg';
+    await _db.storage.from('fotos-avaliacao').uploadBinary(
+        caminho, Uint8List.fromList(bytes),
+        fileOptions: const FileOptions(contentType: 'image/jpeg'));
+    final url = await _db.storage
+        .from('fotos-avaliacao')
+        .createSignedUrl(caminho, 60 * 60 * 24 * 365);
+    await _db.from('fotos_postura').insert({
+      'empresa_id': empresa,
+      'aluno_id': alunoId,
+      'angulo': angulo.name,
+      'url': url,
+    });
+  }
+
+  @override
+  Future<List<FotoAluno>> fotosPostura(String alunoId) async {
+    final linhas = await _db
+        .from('fotos_postura')
+        .select()
+        .eq('aluno_id', await _resolveAlunoId(alunoId))
+        .order('data', ascending: false);
+    return [
+      for (final l in linhas)
+        FotoAluno(
+          id: l['id'] as String,
+          alunoId: l['aluno_id'] as String,
+          data: DateTime.parse(l['data'] as String),
+          angulo: AnguloFoto.values.byName(l['angulo'] as String),
+          url: l['url'] as String,
+        ),
+    ];
   }
 }

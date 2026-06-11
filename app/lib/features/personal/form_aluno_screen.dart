@@ -26,6 +26,7 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
           ? ''
           : widget.aluno!.pesoAtualKg.toStringAsFixed(1).replaceAll('.', ','));
   late String _objetivo = widget.aluno?.objetivo ?? 'Hipertrofia';
+  late String _sexo = widget.aluno?.sexo ?? 'masculino';
   late int _frequencia = widget.aluno?.frequenciaSemanal ?? 3;
   late bool _riscoEvasao = widget.aluno?.riscoEvasao ?? false;
   bool _salvando = false;
@@ -64,6 +65,7 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
         frequenciaSemanal: _frequencia,
         pesoAtualKg: peso,
         riscoEvasao: _riscoEvasao,
+        sexo: _sexo,
       ));
     } else {
       await repo.atualizar(widget.aluno!.copyWith(
@@ -73,6 +75,7 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
         frequenciaSemanal: _frequencia,
         pesoAtualKg: peso,
         riscoEvasao: _riscoEvasao,
+        sexo: _sexo,
       ));
       ref.invalidate(alunoProvider(widget.aluno!.id));
     }
@@ -144,6 +147,19 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
                         : null;
                   },
                 ),
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: _sexo,
+                isExpanded: true,
+                decoration: dec('Sexo (para protocolos de avaliação)'),
+                items: const [
+                  DropdownMenuItem(
+                      value: 'masculino', child: Text('Masculino')),
+                  DropdownMenuItem(
+                      value: 'feminino', child: Text('Feminino')),
+                ],
+                onChanged: (v) => setState(() => _sexo = v ?? _sexo),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(

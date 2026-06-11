@@ -6,8 +6,10 @@ import '../../app/theme/brand_theme.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import '../aluno/chat_screen.dart';
+import 'anamnese_screen.dart';
 import 'comparativo_screen.dart';
 import 'form_aluno_screen.dart';
+import 'fotos_postura_screen.dart';
 import 'nova_avaliacao_screen.dart';
 
 class AlunoDetalheScreen extends ConsumerWidget {
@@ -139,19 +141,56 @@ class AlunoDetalheScreen extends ConsumerWidget {
                 label: const Text('Comparar'),
               ),
             ),
-            FilledButton.tonalIcon(
-              onPressed: () {
-                final aluno = alunoAsync.valueOrNull;
-                if (aluno == null) return;
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => NovaAvaliacaoScreen(
-                        alunoId: alunoId, nomeAluno: aluno.primeiroNome),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Nova avaliação'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () {
+                    final aluno = alunoAsync.valueOrNull;
+                    if (aluno == null) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => NovaAvaliacaoScreen(
+                            alunoId: alunoId,
+                            nomeAluno: aluno.primeiroNome),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nova avaliação'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final aluno = alunoAsync.valueOrNull;
+                    if (aluno == null) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => AnamneseScreen(
+                            alunoId: alunoId,
+                            nomeAluno: aluno.primeiroNome),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.assignment_outlined),
+                  label: const Text('Anamnese'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final aluno = alunoAsync.valueOrNull;
+                    if (aluno == null) return;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => FotosPosturaScreen(
+                            alunoId: alunoId,
+                            nomeAluno: aluno.primeiroNome),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.accessibility_new),
+                  label: const Text('Postura'),
+                ),
+              ],
             ),
             const SizedBox(height: 10),
             AsyncView(

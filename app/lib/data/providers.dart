@@ -115,6 +115,16 @@ final avaliacoesProvider = FutureProvider.family<List<AvaliacaoFisica>, String>(
   (ref, alunoId) => ref.watch(evolucaoRepositoryProvider).avaliacoes(alunoId),
 );
 
+final anamneseProvider = FutureProvider.family<Anamnese?, String>(
+  (ref, alunoId) =>
+      ref.watch(evolucaoRepositoryProvider).ultimaAnamnese(alunoId),
+);
+
+final fotosPosturaProvider = FutureProvider.family<List<FotoAluno>, String>(
+  (ref, alunoId) =>
+      ref.watch(evolucaoRepositoryProvider).fotosPostura(alunoId),
+);
+
 final cargasProvider =
     FutureProvider.family<List<RegistroCarga>, ({String alunoId, String exercicioId})>(
   (ref, args) => ref

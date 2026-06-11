@@ -217,4 +217,38 @@ class MockEvolucaoRepository implements EvolucaoRepository {
         .add(RegistroPeso(data: DateTime.now(), pesoKg: pesoKg));
     return _simulaRede(null);
   }
+
+  @override
+  Future<void> salvarAnamnese(Anamnese anamnese) {
+    _db.anamneses.add(anamnese);
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<Anamnese?> ultimaAnamnese(String alunoId) {
+    final doAluno =
+        _db.anamneses.where((a) => a.alunoId == alunoId).toList();
+    return _simulaRede(doAluno.isEmpty ? null : doAluno.last);
+  }
+
+  @override
+  Future<void> salvarFotoPostura({
+    required String alunoId,
+    required AnguloFoto angulo,
+    required List<int> bytes,
+  }) {
+    _db.fotosPostura.add(FotoAluno(
+      id: 'fp${_db.fotosPostura.length + 1}',
+      alunoId: alunoId,
+      data: DateTime.now(),
+      angulo: angulo,
+      bytes: bytes,
+    ));
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<List<FotoAluno>> fotosPostura(String alunoId) => _simulaRede(
+        _db.fotosPostura.where((f) => f.alunoId == alunoId).toList(),
+      );
 }

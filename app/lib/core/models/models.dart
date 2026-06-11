@@ -33,7 +33,11 @@ class Aluno {
     required this.frequenciaSemanal,
     required this.pesoAtualKg,
     this.riscoEvasao = false,
+    this.sexo = 'masculino',
   });
+
+  /// 'masculino' | 'feminino' — usado pelos protocolos de avaliação.
+  final String sexo;
 
   Aluno copyWith({
     String? nome,
@@ -42,6 +46,7 @@ class Aluno {
     int? frequenciaSemanal,
     double? pesoAtualKg,
     bool? riscoEvasao,
+    String? sexo,
   }) {
     return Aluno(
       id: id,
@@ -52,6 +57,7 @@ class Aluno {
       frequenciaSemanal: frequenciaSemanal ?? this.frequenciaSemanal,
       pesoAtualKg: pesoAtualKg ?? this.pesoAtualKg,
       riscoEvasao: riscoEvasao ?? this.riscoEvasao,
+      sexo: sexo ?? this.sexo,
     );
   }
 
@@ -217,17 +223,94 @@ class AvaliacaoFisica {
     required this.massaMagraKg,
     this.medidas = const {},
     this.observacoes = '',
+    this.pro = const AvaliacaoPro(),
   });
 
   final DateTime data;
   final double pesoKg;
   final double gorduraPct;
   final double massaMagraKg;
+  final AvaliacaoPro pro;
 
   /// Circunferências em cm — chaves padrão: 'Braço', 'Cintura',
   /// 'Quadril', 'Coxa'.
   final Map<String, double> medidas;
   final String observacoes;
+}
+
+/// Dados profissionais opcionais anexados a uma avaliação.
+class AvaliacaoPro {
+  const AvaliacaoPro({
+    this.protocolo = '',
+    this.dobras = const {},
+    this.bioimpedancia = const {},
+    this.testes = const {},
+  });
+
+  /// 'pollock3', 'pollock7', 'petroski' ou '' (percentual digitado).
+  final String protocolo;
+
+  /// Dobras em mm — chaves: tricipital, subescapular, peitoral,
+  /// axilar_media, suprailiaca, abdominal, coxa, panturrilha.
+  final Map<String, double> dobras;
+
+  /// agua_pct, gordura_visceral, massa_ossea_kg…
+  final Map<String, double> bioimpedancia;
+
+  /// um_rm_kg, cooper_m, vo2, wells_cm…
+  final Map<String, double> testes;
+}
+
+/// Anamnese digital (PAR-Q + histórico de saúde).
+class Anamnese {
+  const Anamnese({
+    required this.alunoId,
+    required this.data,
+    required this.parq,
+    this.lesoes = '',
+    this.cirurgias = '',
+    this.medicamentos = '',
+    this.horasSono = 7,
+    this.habitos = '',
+  });
+
+  final String alunoId;
+  final DateTime data;
+
+  /// Respostas das 7 perguntas do PAR-Q (true = sim).
+  final List<bool> parq;
+  final String lesoes;
+  final String cirurgias;
+  final String medicamentos;
+  final int horasSono;
+  final String habitos;
+
+  /// Qualquer "sim" no PAR-Q exige liberação médica.
+  bool get exigeLiberacaoMedica => parq.any((r) => r);
+}
+
+enum AnguloFoto { frente, costas, perfilDireito, perfilEsquerdo }
+
+/// Foto postural ou de evolução. No mock os bytes vivem em memória;
+/// no Supabase a foto vai para o Storage e [url] é preenchida.
+class FotoAluno {
+  const FotoAluno({
+    required this.id,
+    required this.alunoId,
+    required this.data,
+    this.angulo,
+    this.url,
+    this.bytes,
+    this.observacao = '',
+  });
+
+  final String id;
+  final String alunoId;
+  final DateTime data;
+  final AnguloFoto? angulo;
+  final String? url;
+  final List<int>? bytes;
+  final String observacao;
 }
 
 /// Uma série efetivamente executada durante um treino.

@@ -85,4 +85,18 @@ abstract interface class EvolucaoRepository {
 
   /// Registro rápido de peso pelo aluno ou profissional.
   Future<void> registrarPeso(String alunoId, double pesoKg);
+
+  // ------------------------------------------------- avaliação profissional
+
+  Future<void> salvarAnamnese(Anamnese anamnese);
+  Future<Anamnese?> ultimaAnamnese(String alunoId);
+
+  /// Salva uma foto postural (Storage no Supabase; memória no mock).
+  Future<void> salvarFotoPostura({
+    required String alunoId,
+    required AnguloFoto angulo,
+    required List<int> bytes,
+  });
+
+  Future<List<FotoAluno>> fotosPostura(String alunoId);
 }
