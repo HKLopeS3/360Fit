@@ -7,6 +7,7 @@ import '../features/aluno/chat_screen.dart';
 import '../features/aluno/evolucao_screen.dart';
 import '../features/aluno/hoje_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/institucional/institucional_screens.dart';
 import '../features/personal/agenda_personal_screen.dart';
 import '../features/personal/aluno_detalhe_screen.dart';
 import '../features/personal/alunos_screen.dart';
@@ -49,6 +50,12 @@ final router = GoRouter(
             pageBuilder: _semTransicao(const ChatScreen()),
           ),
         ]),
+        StatefulShellBranch(routes: [
+          GoRoute(
+            path: '/aluno/mais',
+            pageBuilder: _semTransicao(const MaisScreen()),
+          ),
+        ]),
       ],
     ),
     // ---------------------------------------------------------- personal
@@ -84,6 +91,12 @@ final router = GoRouter(
           GoRoute(
             path: '/personal/agenda',
             pageBuilder: _semTransicao(const AgendaPersonalScreen()),
+          ),
+        ]),
+        StatefulShellBranch(routes: [
+          GoRoute(
+            path: '/personal/mais',
+            pageBuilder: _semTransicao(const MaisScreen()),
           ),
         ]),
       ],

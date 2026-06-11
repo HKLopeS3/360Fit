@@ -37,6 +37,11 @@ class AlunoShell extends StatelessWidget {
             selectedIcon: Icon(Icons.chat_bubble),
             label: 'Chat',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_outlined),
+            selectedIcon: Icon(Icons.menu),
+            label: 'Mais',
+          ),
         ],
       ),
     );

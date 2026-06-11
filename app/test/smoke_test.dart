@@ -44,5 +44,19 @@ void main() {
     await tester.tap(find.text('Alunos').last);
     await _bombearAteCarregar(tester);
     expect(find.text('Fernanda Costa'), findsOneWidget);
+
+    // Aba Mais: menu institucional e políticas.
+    await tester.tap(find.text('Mais').last);
+    await _bombearAteCarregar(tester);
+    expect(find.text('Ajuda e perguntas frequentes'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Política de privacidade'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Política de privacidade'));
+    await _bombearAteCarregar(tester);
+    expect(find.textContaining('Última atualização'), findsOneWidget);
   });
 }

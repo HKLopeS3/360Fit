@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme/brand_theme.dart';
+import '../../core/config/contato.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
+import '../institucional/institucional_screens.dart';
+import '../institucional/politicas_conteudo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -43,7 +46,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
-              child: Card(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Card(
                 color: Colors.white,
                 child: Padding(
                   padding: const EdgeInsets.all(32),
@@ -113,10 +119,60 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
               ),
+                  const SizedBox(height: 16),
+                  const _RodapeInstitucional(),
+                ],
+              ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Rodapé com links institucionais e contato, visível antes do login.
+class _RodapeInstitucional extends StatelessWidget {
+  const _RodapeInstitucional();
+
+  @override
+  Widget build(BuildContext context) {
+    void abrir(Widget tela) => Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => tela));
+
+    TextButton link(String rotulo, VoidCallback aoTocar) => TextButton(
+          onPressed: aoTocar,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            textStyle: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+          child: Text(rotulo),
+        );
+
+    return Column(
+      children: [
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: [
+            link('Ajuda', () => abrir(const AjudaScreen())),
+            link('Trabalhe conosco',
+                () => abrir(const TrabalheConoscoScreen())),
+            link('Privacidade',
+                () => abrir(const DocumentoScreen(doc: politicaPrivacidade))),
+            link('Termos',
+                () => abrir(const DocumentoScreen(doc: termosDeUso))),
+            link('Contato', () => abrir(const ContatoScreen())),
+          ],
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '${Contato.email} · ${Contato.telefone}',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+      ],
     );
   }
 }

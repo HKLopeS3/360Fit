@@ -37,6 +37,11 @@ class PersonalShell extends StatelessWidget {
             selectedIcon: Icon(Icons.calendar_month),
             label: 'Agenda',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.menu_outlined),
+            selectedIcon: Icon(Icons.menu),
+            label: 'Mais',
+          ),
         ],
       ),
     );

@@ -22,6 +22,25 @@ class LogoutButton extends ConsumerWidget {
   }
 }
 
+/// Limita a largura do conteúdo em telas grandes (tablet/desktop),
+/// mantendo as listas legíveis e centralizadas.
+class PaginaCentralizada extends StatelessWidget {
+  const PaginaCentralizada({super.key, required this.child, this.maxWidth = 760});
+
+  final Widget child;
+  final double maxWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: child,
+      ),
+    );
+  }
+}
+
 /// Renderiza um [AsyncValue] com loading/erro padrão.
 class AsyncView<T> extends StatelessWidget {
   const AsyncView({super.key, required this.value, required this.builder});
