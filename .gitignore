@@ -11,10 +11,19 @@
 **/ephemeral/
 
 # Credenciais locais
+.env
 .env.local
+.env.*.local
 
 # SO / editor
 .DS_Store
 Thumbs.db
 *.log
 .vscode/
+.idea/
+
+# Netlify
+.netlify/
+
+# Dependencies
+node_modules/

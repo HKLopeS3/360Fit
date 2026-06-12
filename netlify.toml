@@ -1,0 +1,33 @@
+[build]
+command = "cd app && flutter build web --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+publish = "app/build/web"
+
+[dev]
+command = "cd app && flutter run -d web-server --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+port = 5000
+
+# Rewrite para SPA (React Router compatible)
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+# Headers de segurança
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "SAMEORIGIN"
+X-Content-Type-Options = "nosniff"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Headers para cache
+[[headers]]
+for = "/assets/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/*.html"
+[headers.values]
+Cache-Control = "public, max-age=3600, must-revalidate"
