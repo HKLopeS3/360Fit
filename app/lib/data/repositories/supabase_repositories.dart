@@ -68,6 +68,27 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> recuperarSenha(String email) =>
       _db.auth.resetPasswordForEmail(email.trim());
 
+  /// Registra novo aluno (email + senha).
+  Future<Usuario> registrar(String nome, String email, String senha) async {
+    // Criar usuário no Auth
+    final resposta = await _db.auth.signUp(
+      email: email.trim(),
+      password: senha,
+    );
+    
+    // Atualizar perfil com nome (trigger do Auth já cria o perfil básico)
+    await _db.from('perfis').update({
+      'nome': nome,
+    }).eq('id', resposta.user!.id);
+    
+    return Usuario(
+      id: resposta.user!.id,
+      nome: nome,
+      email: email.trim(),
+      perfil: PerfilUsuario.aluno,
+    );
+  }
+
   Future<Usuario> _usuarioDoPerfil(String userId) async {
     final dados =
         await _db.from('perfis').select().eq('id', userId).single();
