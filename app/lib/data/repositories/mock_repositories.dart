@@ -10,11 +10,6 @@ class MockAuthRepository implements AuthRepository {
   final _db = MockDatabase.instance;
 
   @override
-  Future<Usuario> login(PerfilUsuario perfil) => _simulaRede(
-        perfil == PerfilUsuario.aluno ? _db.usuarioAluno : _db.usuarioPersonal,
-      );
-
-  @override
   Future<Usuario> entrarComEmailSenha(String email, String senha) {
     final normalizado = email.trim().toLowerCase();
     if (normalizado == _db.usuarioPersonal.email) {

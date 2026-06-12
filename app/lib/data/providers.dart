@@ -53,12 +53,6 @@ class SessaoNotifier extends Notifier<Usuario?> {
   @override
   Usuario? build() => _inicial;
 
-  Future<Usuario> entrar(PerfilUsuario perfil) async {
-    final usuario = await ref.read(authRepositoryProvider).login(perfil);
-    state = usuario;
-    return usuario;
-  }
-
   Future<Usuario> entrarComEmailSenha(String email, String senha) async {
     final usuario = await ref
         .read(authRepositoryProvider)

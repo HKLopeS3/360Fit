@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/config/app_config.dart';
 import '../../core/models/models.dart';
 import '../providers.dart' show alunoLogadoId;
 import 'repositories.dart';
@@ -29,16 +28,6 @@ Future<String> _resolveAlunoId(String alunoId) async {
 }
 
 class SupabaseAuthRepository implements AuthRepository {
-  /// Usuários do seed de demonstração (supabase/seed.sql).
-  static const emailsDemo = {
-    PerfilUsuario.aluno: 'carlos.mendes@email.com',
-    PerfilUsuario.personal: 'joao.silva@360fit.com.br',
-  };
-
-  @override
-  Future<Usuario> login(PerfilUsuario perfil) =>
-      entrarComEmailSenha(emailsDemo[perfil]!, AppConfig.demoSenha);
-
   @override
   Future<Usuario> entrarComEmailSenha(String email, String senha) async {
     final resposta = await _db.auth.signInWithPassword(

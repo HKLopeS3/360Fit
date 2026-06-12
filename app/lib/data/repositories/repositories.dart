@@ -6,9 +6,6 @@ import '../../core/models/models.dart';
 /// por implementações mock (`mock_repositories.dart`) e, no futuro, por um
 /// client HTTP da API NestJS.
 abstract interface class AuthRepository {
-  /// Login de demonstração por papel (modo mock / botões demo).
-  Future<Usuario> login(PerfilUsuario perfil);
-
   /// Login real com credenciais; o papel vem do perfil persistido.
   Future<Usuario> entrarComEmailSenha(String email, String senha);
 
