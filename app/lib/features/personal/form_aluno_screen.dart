@@ -150,7 +150,7 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: _sexo,
+                value: _sexo,
                 isExpanded: true,
                 decoration: dec('Sexo (para protocolos de avaliação)'),
                 items: const [
@@ -163,7 +163,7 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                initialValue: _objetivo,
+                value: _objetivo,
                 isExpanded: true,
                 decoration: dec('Objetivo'),
                 items: [

@@ -159,7 +159,7 @@ class _SeletorAvaliacao extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<int>(
-      initialValue: indice,
+      value: indice,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: rotulo,

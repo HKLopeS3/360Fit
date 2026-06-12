@@ -112,7 +112,7 @@ class _NovoAgendamentoScreenState
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<TipoAgendamento>(
-                initialValue: _tipo,
+                value: _tipo,
                 isExpanded: true,
                 decoration: dec('Tipo'),
                 items: [
