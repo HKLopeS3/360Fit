@@ -87,6 +87,5 @@ ON CONFLICT (id) DO NOTHING;
 --
 -- 1. Fazer login na web como aluno: carlos.mendes@email.com / demo360fit
 -- 2. Fazer login na web como personal: joao.silva@360fit.com.br / demo360fit
--- 3. Criar novas contas para testar o fluxo de registro
 --
 -- =========================================================================
