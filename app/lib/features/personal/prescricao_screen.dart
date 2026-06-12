@@ -107,7 +107,7 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
           children: [
             DropdownButtonFormField<String>(
-              initialValue: _alunoId,
+              value: _alunoId,
               decoration: InputDecoration(
                 labelText: 'Aluno',
                 filled: true,
@@ -491,7 +491,7 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<MetodoTreino>(
-            initialValue: _metodo,
+            value: _metodo,
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Método'),
             items: [

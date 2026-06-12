@@ -74,7 +74,7 @@ ThemeData buildTheme({BrandTheme brand = BrandTheme.fit360}) {
     textTheme: GoogleFonts.interTextTheme(base.textTheme),
     extensions: [brand],
     scaffoldBackgroundColor: const Color(0xFFF6F8F8),
-    cardTheme: const CardThemeData(
+    cardTheme: const CardTheme(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(16)),

@@ -101,7 +101,7 @@ class _NovoAgendamentoScreenState
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
               DropdownButtonFormField<String>(
-                initialValue: _alunoId,
+                value: _alunoId,
                 isExpanded: true,
                 decoration: dec('Aluno *'),
                 items: [

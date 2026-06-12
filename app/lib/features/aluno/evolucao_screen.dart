@@ -188,7 +188,7 @@ class _LinhaChart extends StatelessWidget {
             dotData: const FlDotData(show: true),
             belowBarData: BarAreaData(
               show: true,
-              color: cor.withValues(alpha: 0.08),
+              color: cor.withOpacity(0.08),
             ),
           ),
         ],

@@ -198,7 +198,7 @@ class _ConclusaoCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: brand.sucesso.withValues(alpha: 0.15),
+          backgroundColor: brand.sucesso.withOpacity(0.15),
           child: Icon(Icons.check, color: brand.sucesso),
         ),
         title: Text(c.nomeTreino,
