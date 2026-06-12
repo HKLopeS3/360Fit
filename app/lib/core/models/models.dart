@@ -419,6 +419,58 @@ class Mensalidade {
   bool get atrasada => !paga && DateTime.now().isAfter(vencimento);
 }
 
+enum StatusPostagem { pendente, aprovada, rejeitada }
+
+/// Postagem do feed social (criada pelo aluno, moderada pelo personal).
+class Postagem {
+  const Postagem({
+    required this.id,
+    required this.alunoId,
+    required this.autorNome,
+    required this.texto,
+    required this.criadaEm,
+    this.fotoUrl,
+    this.fotoBytes,
+    this.status = StatusPostagem.pendente,
+    this.motivoRejeicao = '',
+    this.curtidas = 0,
+    this.euCurti = false,
+  });
+
+  final String id;
+  final String alunoId;
+  final String autorNome;
+  final String texto;
+  final DateTime criadaEm;
+  final String? fotoUrl;
+  final List<int>? fotoBytes;
+  final StatusPostagem status;
+  final String motivoRejeicao;
+  final int curtidas;
+  final bool euCurti;
+
+  Postagem copyWith({
+    StatusPostagem? status,
+    String? motivoRejeicao,
+    int? curtidas,
+    bool? euCurti,
+  }) {
+    return Postagem(
+      id: id,
+      alunoId: alunoId,
+      autorNome: autorNome,
+      texto: texto,
+      criadaEm: criadaEm,
+      fotoUrl: fotoUrl,
+      fotoBytes: fotoBytes,
+      status: status ?? this.status,
+      motivoRejeicao: motivoRejeicao ?? this.motivoRejeicao,
+      curtidas: curtidas ?? this.curtidas,
+      euCurti: euCurti ?? this.euCurti,
+    );
+  }
+}
+
 /// Medalha de gamificação derivada do histórico (sem persistência).
 class Medalha {
   const Medalha({

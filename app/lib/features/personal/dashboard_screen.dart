@@ -7,6 +7,7 @@ import '../../app/theme/brand_theme.dart';
 import '../../core/mock/mock_database.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import '../feed/feed_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -23,7 +24,17 @@ class DashboardScreen extends ConsumerWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        actions: const [LogoutButton()],
+        actions: [
+          IconButton(
+            tooltip: 'Feed da academia',
+            icon: const Icon(Icons.dynamic_feed_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const FeedScreen(comoPersonal: true)),
+            ),
+          ),
+          const LogoutButton(),
+        ],
       ),
       body: PaginaCentralizada(
         child: AsyncView(

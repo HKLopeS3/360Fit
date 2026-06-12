@@ -5,6 +5,7 @@ import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import '../feed/feed_screen.dart';
 import 'execucao_treino_screen.dart';
 import 'notificacoes.dart';
 
@@ -34,7 +35,18 @@ class HojeScreen extends ConsumerWidget {
           ],
         ),
         toolbarHeight: 72,
-        actions: const [SinoNotificacoes(), LogoutButton()],
+        actions: [
+          IconButton(
+            tooltip: 'Feed da academia',
+            icon: const Icon(Icons.dynamic_feed_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const FeedScreen(comoPersonal: false)),
+            ),
+          ),
+          const SinoNotificacoes(),
+          const LogoutButton(),
+        ],
       ),
       body: PaginaCentralizada(
         child: AsyncView(

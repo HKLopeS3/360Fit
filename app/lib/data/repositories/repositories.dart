@@ -133,6 +133,25 @@ abstract interface class EvolucaoRepository {
   Future<int> registrarCopo(String alunoId, int delta);
 }
 
+abstract interface class FeedRepository {
+  /// Postagens aprovadas da empresa + as do próprio aluno (qualquer status).
+  Future<List<Postagem>> feed();
+
+  /// Fila de moderação (pendentes) — visão do personal.
+  Future<List<Postagem>> pendentes();
+
+  Future<void> publicar({
+    required String alunoId,
+    required String texto,
+    List<int>? fotoBytes,
+  });
+
+  Future<void> moderar(String postagemId,
+      {required bool aprovar, String motivo = ''});
+
+  Future<void> alternarCurtida(String postagemId);
+}
+
 abstract interface class FinanceiroRepository {
   Future<List<Mensalidade>> doAluno(String alunoId);
 

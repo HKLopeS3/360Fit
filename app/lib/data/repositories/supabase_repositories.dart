@@ -497,6 +497,123 @@ class SupabaseAgendaRepository implements AgendaRepository {
   }
 }
 
+class SupabaseFeedRepository implements FeedRepository {
+  Future<String> _empresa() async {
+    final l = await _db
+        .from('perfis')
+        .select('empresa_id')
+        .eq('id', _db.auth.currentUser!.id)
+        .single();
+    return l['empresa_id'] as String;
+  }
+
+  Future<List<Postagem>> _consultar({required bool somentePendentes}) async {
+    final eu = _db.auth.currentUser!.id;
+    var query = _db
+        .from('postagens')
+        .select('*, curtidas(perfil_id), alunos(nome)');
+    if (somentePendentes) {
+      query = query.eq('status', 'pendente');
+    } else {
+      query = query.neq('status', 'rejeitada');
+    }
+    final linhas = await query.order('criada_em', ascending: false);
+    return [
+      for (final l in linhas)
+        Postagem(
+          id: l['id'] as String,
+          alunoId: l['aluno_id'] as String,
+          autorNome:
+              ((l['alunos'] as Map?)?['nome'] as String?) ?? 'Aluno',
+          texto: l['texto'] as String,
+          criadaEm: DateTime.parse(l['criada_em'] as String).toLocal(),
+          fotoUrl: (l['foto_url'] as String?)?.isEmpty ?? true
+              ? null
+              : l['foto_url'] as String,
+          status: StatusPostagem.values.byName(l['status'] as String),
+          motivoRejeicao: (l['motivo_rejeicao'] as String?) ?? '',
+          curtidas: (l['curtidas'] as List? ?? const []).length,
+          euCurti: (l['curtidas'] as List? ?? const [])
+              .any((c) => c['perfil_id'] == eu),
+        ),
+    ];
+  }
+
+  @override
+  Future<List<Postagem>> feed() async {
+    final todas = await _consultar(somentePendentes: false);
+    // pendentes só aparecem para o próprio autor (RLS já restringe a visão
+    // do aluno; aqui filtramos a visão geral do feed)
+    return todas
+        .where((p) =>
+            p.status == StatusPostagem.aprovada ||
+            p.status == StatusPostagem.pendente)
+        .toList();
+  }
+
+  @override
+  Future<List<Postagem>> pendentes() => _consultar(somentePendentes: true);
+
+  @override
+  Future<void> publicar({
+    required String alunoId,
+    required String texto,
+    List<int>? fotoBytes,
+  }) async {
+    final empresa = await _empresa();
+    final id = await _resolveAlunoId(alunoId);
+    var fotoUrl = '';
+    if (fotoBytes != null) {
+      final caminho =
+          '$empresa/$id/${DateTime.now().millisecondsSinceEpoch}-feed.jpg';
+      await _db.storage.from('fotos-feed').uploadBinary(
+          caminho, Uint8List.fromList(fotoBytes),
+          fileOptions: const FileOptions(contentType: 'image/jpeg'));
+      fotoUrl = await _db.storage
+          .from('fotos-feed')
+          .createSignedUrl(caminho, 60 * 60 * 24 * 365);
+    }
+    await _db.from('postagens').insert({
+      'empresa_id': empresa,
+      'aluno_id': id,
+      'autor_perfil_id': _db.auth.currentUser!.id,
+      'texto': texto,
+      'foto_url': fotoUrl,
+    });
+  }
+
+  @override
+  Future<void> moderar(String postagemId,
+      {required bool aprovar, String motivo = ''}) async {
+    await _db.from('postagens').update({
+      'status': aprovar ? 'aprovada' : 'rejeitada',
+      'motivo_rejeicao': motivo,
+      'moderada_em': DateTime.now().toIso8601String(),
+    }).eq('id', postagemId);
+  }
+
+  @override
+  Future<void> alternarCurtida(String postagemId) async {
+    final eu = _db.auth.currentUser!.id;
+    final existe = await _db
+        .from('curtidas')
+        .select('postagem_id')
+        .eq('postagem_id', postagemId)
+        .eq('perfil_id', eu);
+    if (existe.isEmpty) {
+      await _db
+          .from('curtidas')
+          .insert({'postagem_id': postagemId, 'perfil_id': eu});
+    } else {
+      await _db
+          .from('curtidas')
+          .delete()
+          .eq('postagem_id', postagemId)
+          .eq('perfil_id', eu);
+    }
+  }
+}
+
 class SupabaseFinanceiroRepository implements FinanceiroRepository {
   Mensalidade _mapear(Map<String, dynamic> l) => Mensalidade(
         id: l['id'] as String,

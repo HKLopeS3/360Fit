@@ -337,6 +337,73 @@ class MockEvolucaoRepository implements EvolucaoRepository {
   }
 }
 
+class MockFeedRepository implements FeedRepository {
+  final _db = MockDatabase.instance;
+
+  @override
+  Future<List<Postagem>> feed() => _simulaRede(
+        _db.postagens
+            .where((p) =>
+                p.status == StatusPostagem.aprovada ||
+                p.alunoId == 'a1') // próprias do aluno demo
+            .toList()
+          ..sort((a, b) => b.criadaEm.compareTo(a.criadaEm)),
+      );
+
+  @override
+  Future<List<Postagem>> pendentes() => _simulaRede(
+        _db.postagens
+            .where((p) => p.status == StatusPostagem.pendente)
+            .toList()
+          ..sort((a, b) => b.criadaEm.compareTo(a.criadaEm)),
+      );
+
+  @override
+  Future<void> publicar({
+    required String alunoId,
+    required String texto,
+    List<int>? fotoBytes,
+  }) {
+    final aluno = _db.alunos.firstWhere((a) => a.id == alunoId);
+    _db.postagens.add(Postagem(
+      id: 'po${_db.postagens.length + 1}',
+      alunoId: alunoId,
+      autorNome: aluno.nome,
+      texto: texto,
+      criadaEm: DateTime.now(),
+      fotoBytes: fotoBytes,
+    ));
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<void> moderar(String postagemId,
+      {required bool aprovar, String motivo = ''}) {
+    final i = _db.postagens.indexWhere((p) => p.id == postagemId);
+    if (i >= 0) {
+      _db.postagens[i] = _db.postagens[i].copyWith(
+        status:
+            aprovar ? StatusPostagem.aprovada : StatusPostagem.rejeitada,
+        motivoRejeicao: motivo,
+      );
+    }
+    return _simulaRede(null);
+  }
+
+  @override
+  Future<void> alternarCurtida(String postagemId) {
+    final i = _db.postagens.indexWhere((p) => p.id == postagemId);
+    if (i >= 0) {
+      final p = _db.postagens[i];
+      _db.postagens[i] = p.copyWith(
+        euCurti: !p.euCurti,
+        curtidas: p.euCurti ? p.curtidas - 1 : p.curtidas + 1,
+      );
+    }
+    return _simulaRede(null);
+  }
+}
+
 class MockFinanceiroRepository implements FinanceiroRepository {
   final _db = MockDatabase.instance;
 

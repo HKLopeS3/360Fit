@@ -430,6 +430,39 @@ class MockDatabase {
 
   // --------------------------------------------- avaliação profissional
 
+  // ----------------------------------------------------------------- feed
+
+  late final List<Postagem> postagens = [
+    Postagem(
+      id: 'po1',
+      alunoId: 'a2',
+      autorNome: 'Fernanda Costa',
+      texto:
+          'Primeiro mês completo sem faltar nenhum treino! 💪 Obrigada '
+          'pelo apoio, time!',
+      criadaEm: _diasAtras(2),
+      status: StatusPostagem.aprovada,
+      curtidas: 4,
+    ),
+    Postagem(
+      id: 'po2',
+      alunoId: 'a4',
+      autorNome: 'Juliana Rocha',
+      texto: 'PR no agachamento hoje: 60kg! 🏋️‍♀️',
+      criadaEm: _diasAtras(1),
+      status: StatusPostagem.aprovada,
+      curtidas: 7,
+    ),
+    Postagem(
+      id: 'po3',
+      alunoId: 'a7',
+      autorNome: 'Bruno Tavares',
+      texto: 'Alguém mais sente que segunda é o melhor dia? 😅',
+      criadaEm: _hoje.subtract(const Duration(hours: 3)),
+      status: StatusPostagem.pendente,
+    ),
+  ];
+
   final List<Anamnese> anamneses = [];
   final List<FotoAluno> fotosPostura = [];
   final List<FotoAluno> fotosEvolucao = [];

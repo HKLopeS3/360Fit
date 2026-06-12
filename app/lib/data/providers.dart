@@ -31,6 +31,16 @@ final evolucaoRepositoryProvider = Provider<EvolucaoRepository>((ref) =>
     _supabase ? SupabaseEvolucaoRepository() : MockEvolucaoRepository());
 final financeiroRepositoryProvider = Provider<FinanceiroRepository>((ref) =>
     _supabase ? SupabaseFinanceiroRepository() : MockFinanceiroRepository());
+final feedRepositoryProvider = Provider<FeedRepository>(
+    (ref) => _supabase ? SupabaseFeedRepository() : MockFeedRepository());
+
+final feedProvider = FutureProvider<List<Postagem>>(
+  (ref) => ref.watch(feedRepositoryProvider).feed(),
+);
+
+final postagensPendentesProvider = FutureProvider<List<Postagem>>(
+  (ref) => ref.watch(feedRepositoryProvider).pendentes(),
+);
 
 // -------------------------------------------------------------------- sessão
 

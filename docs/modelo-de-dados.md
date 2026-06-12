@@ -22,11 +22,17 @@ alunos   1──n avaliacoes_fisicas / registros_peso / registros_carga
 | `alunos` | id, empresa_id, perfil_id?, profissional_id, objetivo, … | `perfil_id` nulo até o aluno ativar o acesso ao app |
 | `exercicios` | id, empresa_id?, nome, grupo_muscular, equipamento | `empresa_id` nulo = biblioteca global da plataforma |
 | `treinos` | id, empresa_id, aluno_id, nome, foco, dias_semana int[] | |
-| `treino_itens` | treino_id, exercicio_id, ordem, series, repeticoes, carga_kg, descanso_seg | |
+| `treino_itens` | treino_id, exercicio_id, ordem, series, repeticoes, carga_kg, descanso_seg, **cadencia**, **metodo**, **agrupamento** | Métodos: bi_set/drop_set/cluster/rest_pause (0007) |
 | `agendamentos` | id, empresa_id, aluno_id, profissional_id, tipo, data_hora, local, **status** | `tipo`: treino/avaliacao/consulta; `status`: pendente/confirmado/cancelado (migration 0005) |
 | `mensagens` | id, empresa_id, aluno_id, autor_perfil_id, texto, criada_em | Realtime habilitado |
 | `avaliacoes_fisicas` | id, empresa_id, aluno_id, data, peso_kg, gordura_pct, massa_magra_kg, **medidas jsonb**, **observacoes** | Dado sensível de saúde; medidas = circunferências em cm |
-| `treinos_concluidos` | id, empresa_id, aluno_id, treino_id, nome_treino, data, duracao_min | Execuções registradas pelo aluno (migration 0004) |
+| `treinos_concluidos` | id, empresa_id, aluno_id, treino_id, nome_treino, data, duracao_min, **pse**, **dor_articular**, **dor_relato** | Execuções + feedback Borg/dor (migrations 0004/0008) |
+| `anamneses` | aluno_id, parq jsonb, lesoes, cirurgias, medicamentos, horas_sono, habitos | PAR-Q digital (0006) |
+| `fotos_postura` / `fotos_evolucao` | aluno_id, data, angulo/observacao, url | Fotogrametria e linha do tempo (0006/0009); buckets próprios |
+| `programas` | aluno_id, nome, objetivo, macro/meso/microciclo, inicio, fim | Periodização (0007); `treinos.programa_id` |
+| `agua_registros` | aluno_id, data, copos (unique aluno+dia) | Hidratação (0009) |
+| `mensalidades` | aluno_id, competencia, valor, vencimento, pago_em | Financeiro manual (0009) |
+| `postagens` / `curtidas` | aluno_id, texto, foto_url, status pendente/aprovada/rejeitada | Feed moderado (0010); bucket fotos-feed |
 | `series_realizadas` | conclusao_id, indice_item, serie, carga_kg, repeticoes | Séries efetivamente feitas em cada conclusão |
 | `registros_peso` | id, empresa_id, aluno_id, data, peso_kg | |
 | `registros_carga` | id, empresa_id, aluno_id, exercicio_id, data, carga_kg | |
