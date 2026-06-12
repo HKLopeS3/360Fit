@@ -1,9 +1,10 @@
+# Build é feito por GitHub Actions
+# Deploy apenas do diretório gerado
 [build]
-command = "cd app && flutter build web --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
 publish = "app/build/web"
 
 [dev]
-command = "cd app && flutter run -d web-server --dart-define=SUPABASE_URL=$SUPABASE_URL --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY"
+command = "cd app && flutter run -d web-server"
 port = 5000
 
 # Rewrite para SPA (React Router compatible)
