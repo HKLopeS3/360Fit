@@ -138,45 +138,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 }
 
 /// Formulário de autenticação real (modo Supabase).
-class LoginEmailSenhaForm extends ConsumerStatefulWidget {
+class LoginEmailSenhaForm extends ConsumerWidget {
   const LoginEmailSenhaForm({super.key});
 
   @override
-  ConsumerState<LoginEmailSenhaForm> createState() =>
-      _LoginEmailSenhaFormState();
-}
-
-class _LoginEmailSenhaFormState extends ConsumerState<LoginEmailSenhaForm> {
-  bool _estahRegistrando = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        if (_estahRegistrando)
-          _RegistroAlunoForm(
-            aoVoltar: () => setState(() => _estahRegistrando = false),
-            aoRegistrarSucesso: () {
-              setState(() => _estahRegistrando = false);
-              if (context.mounted) {
-                context.go('/aluno/hoje');
-              }
-            },
-          )
-        else
-          _LoginForm(
-            aoRegistrar: () => setState(() => _estahRegistrando = true),
-          ),
-      ],
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const _LoginForm();
   }
 }
 
 /// Formulário de login com email/senha.
 class _LoginForm extends ConsumerStatefulWidget {
-  final VoidCallback aoRegistrar;
-
-  const _LoginForm({required this.aoRegistrar});
+  const _LoginForm();
 
   @override
   ConsumerState<_LoginForm> createState() => _LoginFormState();
@@ -349,15 +322,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _entrando ? null : widget.aoRegistrar,
-            icon: const Icon(Icons.person_add),
-            label: const Text('Criar nova conta'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
           const SizedBox(height: 16),
           Text(
             'Contas de demonstração:',
@@ -387,200 +351,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
   }
 }
 
-/// Formulário para criar nova conta como aluno.
-class _RegistroAlunoForm extends ConsumerStatefulWidget {
-  final VoidCallback aoVoltar;
-  final VoidCallback aoRegistrarSucesso;
-
-  const _RegistroAlunoForm({
-    required this.aoVoltar,
-    required this.aoRegistrarSucesso,
-  });
-
-  @override
-  ConsumerState<_RegistroAlunoForm> createState() =>
-      _RegistroAlunoFormState();
-}
-
-class _RegistroAlunoFormState extends ConsumerState<_RegistroAlunoForm> {
-  final _form = GlobalKey<FormState>();
-  final _nome = TextEditingController();
-  final _email = TextEditingController();
-  final _senha = TextEditingController();
-  final _confirmarSenha = TextEditingController();
-  bool _ocultarSenha = true;
-  bool _ocultarConfirmar = true;
-  bool _registrando = false;
-
-  @override
-  void dispose() {
-    _nome.dispose();
-    _email.dispose();
-    _senha.dispose();
-    _confirmarSenha.dispose();
-    super.dispose();
-  }
-
-  String _mensagemErro(Object e) {
-    if (e is AuthException) {
-      if (e.code == 'user_already_exists') {
-        return 'Este email já está cadastrado.';
-      }
-      if (e.code == 'weak_password') {
-        return 'Senha muito fraca. Use pelo menos 8 caracteres.';
-      }
-      return 'Não foi possível criar sua conta. Tente novamente.';
-    }
-    return 'Falha de conexão. Verifique sua internet e tente novamente.';
-  }
-
-  Future<void> _registrar() async {
-    if (!_form.currentState!.validate()) return;
-    if (_senha.text != _confirmarSenha.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('As senhas não coincidem.')),
-      );
-      return;
-    }
-    setState(() => _registrando = true);
-    try {
-      await ref.read(sessaoProvider.notifier).registrar(
-            _nome.text.trim(),
-            _email.text.trim(),
-            _senha.text,
-          );
-      if (!mounted) return;
-      widget.aoRegistrarSucesso();
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _registrando = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_mensagemErro(e))),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Form(
-      key: _form,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Criar nova conta',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _nome,
-            textCapitalization: TextCapitalization.words,
-            decoration: const InputDecoration(
-              labelText: 'Seu nome completo',
-              prefixIcon: Icon(Icons.person_outline),
-              border: OutlineInputBorder(),
-            ),
-            validator: (v) =>
-                (v == null || v.trim().isEmpty) ? 'Informe seu nome' : null,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.username],
-            decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.alternate_email),
-              border: OutlineInputBorder(),
-            ),
-            validator: (v) {
-              final email = v?.trim() ?? '';
-              if (email.isEmpty) return 'Informe seu email';
-              if (!email.contains('@') || !email.contains('.')) {
-                return 'Email inválido';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _senha,
-            obscureText: _ocultarSenha,
-            autofillHints: const [AutofillHints.password],
-            decoration: InputDecoration(
-              labelText: 'Senha (mínimo 8 caracteres)',
-              prefixIcon: const Icon(Icons.lock_outline),
-              border: const OutlineInputBorder(),
-              suffixIcon: IconButton(
-                tooltip: _ocultarSenha ? 'Mostrar senha' : 'Ocultar senha',
-                icon: Icon(_ocultarSenha
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined),
-                onPressed: () =>
-                    setState(() => _ocultarSenha = !_ocultarSenha),
-              ),
-            ),
-            validator: (v) {
-              if (v == null || v.isEmpty) return 'Informe uma senha';
-              if (v.length < 8) return 'Senha deve ter pelo menos 8 caracteres';
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _confirmarSenha,
-            obscureText: _ocultarConfirmar,
-            autofillHints: const [AutofillHints.password],
-            decoration: InputDecoration(
-              labelText: 'Confirmar senha',
-              prefixIcon: const Icon(Icons.lock_outline),
-              border: const OutlineInputBorder(),
-              suffixIcon: IconButton(
-                tooltip: _ocultarConfirmar
-                    ? 'Mostrar senha'
-                    : 'Ocultar senha',
-                icon: Icon(_ocultarConfirmar
-                    ? Icons.visibility_outlined
-                    : Icons.visibility_off_outlined),
-                onPressed: () =>
-                    setState(() => _ocultarConfirmar = !_ocultarConfirmar),
-              ),
-            ),
-            validator: (v) =>
-                (v == null || v.isEmpty) ? 'Confirme sua senha' : null,
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _registrando ? null : _registrar,
-            icon: _registrando
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.person_add),
-            label: const Text('Criar minha conta'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: _registrando ? null : widget.aoVoltar,
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: const Text('Voltar ao login'),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 /// Rodapé com links institucionais e contato, visível antes do login.
 class _RodapeInstitucional extends StatelessWidget {

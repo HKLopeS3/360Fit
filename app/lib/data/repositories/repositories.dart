@@ -12,9 +12,6 @@ abstract interface class AuthRepository {
   /// Login real com credenciais; o papel vem do perfil persistido.
   Future<Usuario> entrarComEmailSenha(String email, String senha);
 
-  /// Registra novo aluno com nome, email e senha.
-  Future<Usuario> registrar(String nome, String email, String senha);
-
   /// Usuário da sessão persistida, ou null se não houver/expirou.
   Future<Usuario?> usuarioAtual();
 

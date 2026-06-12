@@ -67,14 +67,6 @@ class SessaoNotifier extends Notifier<Usuario?> {
     return usuario;
   }
 
-  Future<Usuario> registrar(String nome, String email, String senha) async {
-    final usuario = await ref
-        .read(authRepositoryProvider)
-        .registrar(nome, email, senha);
-    state = usuario;
-    return usuario;
-  }
-
   Future<void> sair() async {
     await ref.read(authRepositoryProvider).sair();
     state = null;

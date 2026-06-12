@@ -24,17 +24,6 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Usuario> registrar(String nome, String email, String senha) {
-    // Em modo mock, apenas retorna um novo usuário aluno
-    return _simulaRede(Usuario(
-      id: 'mock-user-${DateTime.now().millisecondsSinceEpoch}',
-      nome: nome,
-      email: email.trim().toLowerCase(),
-      perfil: PerfilUsuario.aluno,
-    ));
-  }
-
-  @override
   Future<Usuario?> usuarioAtual() => _simulaRede(null);
 
   @override
