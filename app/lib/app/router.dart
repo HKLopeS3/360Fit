@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../core/config/app_config.dart';
 
 import '../features/aluno/agenda_screen.dart';
 import '../features/aluno/aluno_shell.dart';
@@ -21,6 +24,13 @@ GoRouter router = criarRouter();
 
 GoRouter criarRouter({String initialLocation = '/login'}) => GoRouter(
   initialLocation: initialLocation,
+  // Protege deep links: sem sessão (modo Supabase) tudo volta ao login.
+  redirect: (context, state) {
+    if (!AppConfig.usarSupabase) return null;
+    final logado = Supabase.instance.client.auth.currentSession != null;
+    if (!logado && state.matchedLocation != '/login') return '/login';
+    return null;
+  },
   routes: [
     GoRoute(
       path: '/login',
