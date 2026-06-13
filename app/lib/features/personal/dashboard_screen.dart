@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/theme/brand_theme.dart';
-import '../../core/mock/mock_database.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import '../feed/feed_screen.dart';
@@ -73,13 +72,18 @@ class DashboardScreen extends ConsumerWidget {
                   subtitulo: 'por semana',
                   icone: Icons.event_repeat,
                 ),
-                segundo: MetricCard(
-                  titulo: 'Treinos na semana',
-                  valor:
-                      '${MockDatabase.instance.treinosRealizadosSemana.reduce((a, b) => a + b)}',
-                  subtitulo: 'realizados pelos alunos',
-                  icone: Icons.fitness_center,
-                ),
+                segundo: Consumer(builder: (context, ref, _) {
+                  final semanaAsync = ref.watch(treinosSemanaProvider);
+                  final total = semanaAsync.valueOrNull
+                          ?.fold<int>(0, (a, b) => a + b) ??
+                      0;
+                  return MetricCard(
+                    titulo: 'Treinos na semana',
+                    valor: '$total',
+                    subtitulo: 'realizados pelos alunos',
+                    icone: Icons.fitness_center,
+                  );
+                }),
               ),
               const SectionTitle('Alertas'),
               Consumer(builder: (context, ref, _) {
@@ -135,18 +139,22 @@ class DashboardScreen extends ConsumerWidget {
                 );
               }),
               const SectionTitle('Treinos realizados — últimos 7 dias'),
-              Card(
-                color: Colors.white,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 24, 24, 12),
-                  child: SizedBox(
-                    height: 180,
-                    child: _BarrasSemana(
-                      valores: MockDatabase.instance.treinosRealizadosSemana,
+              Consumer(builder: (context, ref, _) {
+                final semanaAsync = ref.watch(treinosSemanaProvider);
+                return AsyncView(
+                  value: semanaAsync,
+                  builder: (semana) => Card(
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 24, 24, 12),
+                      child: SizedBox(
+                        height: 180,
+                        child: _BarrasSemana(valores: semana),
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
               SectionTitle(
                 'Alunos em risco de evasão',
                 trailing: TextButton(

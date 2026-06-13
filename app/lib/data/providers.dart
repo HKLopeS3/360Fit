@@ -137,6 +137,18 @@ class AlertaPersonal {
   final String? alunoId;
 }
 
+/// Treinos concluídos pelos alunos do profissional logado, por dia da
+/// semana (índice 0 = segunda), nos últimos 7 dias.
+final treinosSemanaProvider = FutureProvider<List<int>>((ref) async {
+  final concluidos =
+      await ref.watch(treinoRepositoryProvider).historicoEmpresa(7);
+  final contagem = List.filled(7, 0);
+  for (final c in concluidos) {
+    contagem[c.data.weekday - 1]++;
+  }
+  return contagem;
+});
+
 final alertasProvider = FutureProvider<List<AlertaPersonal>>((ref) async {
   final alunos = await ref.watch(alunosProvider.future);
   final repo = ref.watch(treinoRepositoryProvider);
