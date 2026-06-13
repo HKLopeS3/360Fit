@@ -55,8 +55,9 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
     final idade = int.tryParse(_idade.text.trim()) ?? 0;
     final repo = ref.read(alunoRepositoryProvider);
 
+    Aluno? novoAluno;
     if (widget.aluno == null) {
-      await repo.criar(Aluno(
+      novoAluno = await repo.criar(Aluno(
         id: 'a-${DateTime.now().millisecondsSinceEpoch}',
         nome: _nome.text.trim(),
         idade: idade,
@@ -81,13 +82,47 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
     }
     ref.invalidate(alunosProvider);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.aluno == null
-            ? 'Aluno ${_nome.text.trim()} cadastrado!'
-            : 'Dados de ${_nome.text.trim()} atualizados!'),
-      ),
-    );
+    if (novoAluno?.codigoConvite != null) {
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('${novoAluno!.nome} cadastrado!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                  'Para liberar o acesso ao app, peça para o aluno '
+                  'tocar em "Criar conta" na tela de login e usar este '
+                  'código de convite:'),
+              const SizedBox(height: 12),
+              SelectableText(
+                novoAluno.codigoConvite!,
+                style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2),
+              ),
+            ],
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Entendi'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(widget.aluno == null
+              ? 'Aluno ${_nome.text.trim()} cadastrado!'
+              : 'Dados de ${_nome.text.trim()} atualizados!'),
+        ),
+      );
+    }
+    if (!mounted) return;
     Navigator.of(context).pop();
   }
 

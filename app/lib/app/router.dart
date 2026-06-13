@@ -9,6 +9,7 @@ import '../features/aluno/aluno_shell.dart';
 import '../features/aluno/chat_screen.dart';
 import '../features/aluno/evolucao_screen.dart';
 import '../features/aluno/hoje_screen.dart';
+import '../features/auth/cadastro_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/institucional/institucional_screens.dart';
 import '../features/personal/agenda_personal_screen.dart';
@@ -28,13 +29,18 @@ GoRouter criarRouter({String initialLocation = '/login'}) => GoRouter(
   redirect: (context, state) {
     if (!AppConfig.usarSupabase) return null;
     final logado = Supabase.instance.client.auth.currentSession != null;
-    if (!logado && state.matchedLocation != '/login') return '/login';
+    const publicas = {'/login', '/cadastro'};
+    if (!logado && !publicas.contains(state.matchedLocation)) return '/login';
     return null;
   },
   routes: [
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/cadastro',
+      builder: (context, state) => const CadastroScreen(),
     ),
     // ------------------------------------------------------------- aluno
     StatefulShellRoute.indexedStack(

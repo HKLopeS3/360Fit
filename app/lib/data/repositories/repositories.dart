@@ -15,6 +15,18 @@ abstract interface class AuthRepository {
   Future<void> sair();
 
   Future<void> recuperarSenha(String email);
+
+  /// Cria uma conta nova. Sem [codigoConvite], a conta vira um
+  /// profissional dono de uma nova empresa; com um código válido
+  /// (gerado ao cadastrar o aluno), a conta vira o login desse aluno.
+  ///
+  /// Retorna `null` quando o Supabase exige confirmação por email (sem
+  /// sessão imediata) — a UI deve orientar o usuário a checar o email.
+  Future<Usuario?> registrar(String nome, String email, String senha,
+      {String? codigoConvite});
+
+  /// Verifica se um código de convite existe e ainda não foi usado.
+  Future<bool> validarCodigoConvite(String codigo);
 }
 
 abstract interface class AlunoRepository {

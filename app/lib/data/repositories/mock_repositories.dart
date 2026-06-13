@@ -26,6 +26,46 @@ class MockAuthRepository implements AuthRepository {
 
   @override
   Future<void> recuperarSenha(String email) => _simulaRede(null);
+
+  @override
+  Future<bool> validarCodigoConvite(String codigo) => _simulaRede(
+        _db.alunos.any((a) => a.codigoConvite == codigo),
+      );
+
+  @override
+  Future<Usuario?> registrar(String nome, String email, String senha,
+      {String? codigoConvite}) {
+    if (codigoConvite != null) {
+      final i =
+          _db.alunos.indexWhere((a) => a.codigoConvite == codigoConvite);
+      if (i < 0) throw Exception('Código de convite inválido');
+      _db.alunos[i] = Aluno(
+        id: _db.alunos[i].id,
+        nome: nome.isEmpty ? _db.alunos[i].nome : nome,
+        idade: _db.alunos[i].idade,
+        objetivo: _db.alunos[i].objetivo,
+        inicio: _db.alunos[i].inicio,
+        frequenciaSemanal: _db.alunos[i].frequenciaSemanal,
+        pesoAtualKg: _db.alunos[i].pesoAtualKg,
+        riscoEvasao: _db.alunos[i].riscoEvasao,
+        sexo: _db.alunos[i].sexo,
+        nascimento: _db.alunos[i].nascimento,
+        codigoConvite: null,
+      );
+      return _simulaRede(Usuario(
+        id: 'u-aluno-novo',
+        nome: nome,
+        email: email,
+        perfil: PerfilUsuario.aluno,
+      ));
+    }
+    return _simulaRede(Usuario(
+      id: 'u-personal-novo',
+      nome: nome,
+      email: email,
+      perfil: PerfilUsuario.personal,
+    ));
+  }
 }
 
 class MockAlunoRepository implements AlunoRepository {
@@ -40,8 +80,21 @@ class MockAlunoRepository implements AlunoRepository {
 
   @override
   Future<Aluno> criar(Aluno aluno) {
-    _db.alunos.add(aluno);
-    return _simulaRede(aluno);
+    final comCodigo = Aluno(
+      id: aluno.id,
+      nome: aluno.nome,
+      idade: aluno.idade,
+      objetivo: aluno.objetivo,
+      inicio: aluno.inicio,
+      frequenciaSemanal: aluno.frequenciaSemanal,
+      pesoAtualKg: aluno.pesoAtualKg,
+      riscoEvasao: aluno.riscoEvasao,
+      sexo: aluno.sexo,
+      nascimento: aluno.nascimento,
+      codigoConvite: 'DEMO-${aluno.id.toUpperCase()}',
+    );
+    _db.alunos.add(comCodigo);
+    return _simulaRede(comCodigo);
   }
 
   @override

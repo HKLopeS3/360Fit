@@ -258,6 +258,10 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
           ),
+          TextButton(
+            onPressed: () => context.go('/cadastro'),
+            child: const Text('Criar conta'),
+          ),
         ],
       ),
     );

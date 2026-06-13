@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -57,6 +58,28 @@ class SupabaseAuthRepository implements AuthRepository {
   Future<void> recuperarSenha(String email) =>
       _db.auth.resetPasswordForEmail(email.trim());
 
+  @override
+  Future<bool> validarCodigoConvite(String codigo) async {
+    final resposta = await _db
+        .rpc('validar_codigo_convite', params: {'codigo': codigo});
+    return resposta as bool;
+  }
+
+  @override
+  Future<Usuario?> registrar(String nome, String email, String senha,
+      {String? codigoConvite}) async {
+    final resposta = await _db.auth.signUp(
+      email: email.trim(),
+      password: senha,
+      data: {
+        'nome': nome,
+        if (codigoConvite != null) 'codigo_convite': codigoConvite,
+      },
+    );
+    if (resposta.session == null) return null;
+    return _usuarioDoPerfil(resposta.user!.id);
+  }
+
   Future<Usuario> _usuarioDoPerfil(String userId) async {
     final dados =
         await _db.from('perfis').select().eq('id', userId).single();
@@ -86,7 +109,17 @@ class SupabaseAlunoRepository implements AlunoRepository {
         nascimento: l['nascimento'] == null
             ? null
             : DateTime.parse(l['nascimento'] as String),
+        codigoConvite: l['codigo_convite'] as String?,
       );
+
+  /// Gera um código de convite legível (sem caracteres ambíguos) para o
+  /// aluno criar a própria conta de acesso.
+  String _gerarCodigoConvite() {
+    const alfabeto = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    final aleatorio = Random.secure();
+    return List.generate(
+        8, (_) => alfabeto[aleatorio.nextInt(alfabeto.length)]).join();
+  }
 
   @override
   Future<List<Aluno>> listar() async {
@@ -119,17 +152,26 @@ class SupabaseAlunoRepository implements AlunoRepository {
         .select('empresa_id')
         .eq('id', _db.auth.currentUser!.id)
         .single();
-    final l = await _db
-        .from('alunos')
-        .insert({
-          ..._paraLinha(aluno),
-          'empresa_id': perfil['empresa_id'],
-          'profissional_id': _db.auth.currentUser!.id,
-          'inicio': aluno.inicio.toIso8601String().substring(0, 10),
-        })
-        .select()
-        .single();
-    return _mapear(l);
+    for (var tentativa = 0; tentativa < 5; tentativa++) {
+      try {
+        final l = await _db
+            .from('alunos')
+            .insert({
+              ..._paraLinha(aluno),
+              'empresa_id': perfil['empresa_id'],
+              'profissional_id': _db.auth.currentUser!.id,
+              'inicio': aluno.inicio.toIso8601String().substring(0, 10),
+              'codigo_convite': _gerarCodigoConvite(),
+            })
+            .select()
+            .single();
+        return _mapear(l);
+      } on PostgrestException catch (e) {
+        if (e.code == '23505' && tentativa < 4) continue;
+        rethrow;
+      }
+    }
+    throw Exception('Não foi possível gerar um código de convite único.');
   }
 
   @override

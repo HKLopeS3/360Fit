@@ -35,7 +35,13 @@ class Aluno {
     this.riscoEvasao = false,
     this.sexo = 'masculino',
     this.nascimento,
+    this.codigoConvite,
   });
+
+  /// Código gerado ao cadastrar o aluno, usado por ele para criar a
+  /// própria conta de acesso ("Criar conta" com código de convite).
+  /// Fica null depois que o aluno ativa o acesso.
+  final String? codigoConvite;
 
   /// 'masculino' | 'feminino' — usado pelos protocolos de avaliação.
   final String sexo;
