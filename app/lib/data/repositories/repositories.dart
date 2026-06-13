@@ -174,7 +174,8 @@ abstract interface class FinanceiroRepository {
   Future<List<Mensalidade>> doAluno(String alunoId);
 
   /// Gera a mensalidade do mês (competência = 1º dia do mês).
-  Future<void> gerar(String alunoId, DateTime competencia, double valor);
+  Future<void> gerar(String alunoId, DateTime competencia, double valor,
+      {DateTime? vencimento});
 
   Future<void> marcarPaga(String id);
 

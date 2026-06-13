@@ -706,8 +706,8 @@ class SupabaseFinanceiroRepository implements FinanceiroRepository {
   }
 
   @override
-  Future<void> gerar(
-      String alunoId, DateTime competencia, double valor) async {
+  Future<void> gerar(String alunoId, DateTime competencia, double valor,
+      {DateTime? vencimento}) async {
     final perfil = await _db
         .from('perfis')
         .select('empresa_id')
@@ -719,7 +719,7 @@ class SupabaseFinanceiroRepository implements FinanceiroRepository {
       'aluno_id': alunoId,
       'competencia': comp.toIso8601String().substring(0, 10),
       'valor': valor,
-      'vencimento': DateTime(comp.year, comp.month, 10)
+      'vencimento': (vencimento ?? DateTime(comp.year, comp.month, 10))
           .toIso8601String()
           .substring(0, 10),
     }, onConflict: 'aluno_id,competencia');

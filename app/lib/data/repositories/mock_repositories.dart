@@ -478,7 +478,8 @@ class MockFinanceiroRepository implements FinanceiroRepository {
       );
 
   @override
-  Future<void> gerar(String alunoId, DateTime competencia, double valor) {
+  Future<void> gerar(String alunoId, DateTime competencia, double valor,
+      {DateTime? vencimento}) {
     final comp = DateTime(competencia.year, competencia.month, 1);
     final jaExiste = _db.mensalidades.any((m) =>
         m.alunoId == alunoId &&
@@ -490,7 +491,7 @@ class MockFinanceiroRepository implements FinanceiroRepository {
         alunoId: alunoId,
         competencia: comp,
         valor: valor,
-        vencimento: DateTime(comp.year, comp.month, 10),
+        vencimento: vencimento ?? DateTime(comp.year, comp.month, 10),
       ));
     }
     return _simulaRede(null);

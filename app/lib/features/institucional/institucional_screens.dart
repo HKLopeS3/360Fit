@@ -7,6 +7,7 @@ import '../../core/config/contato.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import '../aluno/financeiro_aluno_screen.dart';
 import '../aluno/perfil_screen.dart';
 import '../personal/financeiro_config_screen.dart';
 import '../personal/perfil_personal_screen.dart';
@@ -91,6 +92,15 @@ class MaisScreen extends ConsumerWidget {
                 icone: Icons.attach_money,
                 titulo: 'Financeiro',
                 aoTocar: () => abrir(const FinanceiroConfigScreen()),
+              ),
+            ],
+            if (sessao?.perfil == PerfilUsuario.aluno) ...[
+              const SectionTitle('Conta'),
+              _ItemMenu(
+                icone: Icons.attach_money,
+                titulo: 'Financeiro',
+                subtitulo: 'Mensalidades com seu profissional',
+                aoTocar: () => abrir(const FinanceiroAlunoScreen()),
               ),
             ],
             const SectionTitle('Suporte'),

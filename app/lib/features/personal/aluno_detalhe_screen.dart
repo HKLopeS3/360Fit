@@ -20,20 +20,40 @@ class _FinanceiroSection extends ConsumerWidget {
   final String alunoId;
 
   Future<void> _gerarMes(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController(text: '250,00');
-    final valor = await showDialog<double>(
+    final config = await ref.read(configuracaoEmpresaProvider.future);
+    if (!context.mounted) return;
+    final controllerValor = TextEditingController(
+        text: config.mensalidadeValor.toStringAsFixed(2).replaceAll('.', ','));
+    final controllerValidade =
+        TextEditingController(text: '${config.mensalidadeValidadeDias}');
+    final resultado = await showDialog<(double, int)>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Gerar mensalidade do mês'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Valor',
-            prefixText: 'R\$ ',
-            border: OutlineInputBorder(),
-          ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: controllerValor,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Valor',
+                prefixText: 'R\$ ',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controllerValidade,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Validade',
+                suffixText: 'dias',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -41,17 +61,26 @@ class _FinanceiroSection extends ConsumerWidget {
             child: const Text('Cancelar'),
           ),
           FilledButton(
-            onPressed: () => Navigator.of(context).pop(
-                double.tryParse(controller.text.replaceAll(',', '.'))),
+            onPressed: () {
+              final valor = double.tryParse(
+                  controllerValor.text.replaceAll(',', '.'));
+              final validade = int.tryParse(controllerValidade.text);
+              if (valor == null || validade == null) return;
+              Navigator.of(context).pop((valor, validade));
+            },
             child: const Text('Gerar'),
           ),
         ],
       ),
     );
-    if (valor == null) return;
+    if (resultado == null) return;
+    final (valor, validadeDias) = resultado;
+    final agora = DateTime.now();
+    final competencia = DateTime(agora.year, agora.month, 1);
+    final vencimento = competencia.add(Duration(days: validadeDias - 1));
     await ref
         .read(financeiroRepositoryProvider)
-        .gerar(alunoId, DateTime.now(), valor);
+        .gerar(alunoId, competencia, valor, vencimento: vencimento);
     ref.invalidate(mensalidadesProvider(alunoId));
     ref.invalidate(alertasProvider);
   }

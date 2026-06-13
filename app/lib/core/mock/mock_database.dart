@@ -494,10 +494,17 @@ class MockDatabase {
     Mensalidade(
       id: 'me2',
       alunoId: 'a1',
+      competencia: DateTime(_hoje.year, _hoje.month - 1, 1),
+      valor: 250,
+      vencimento: DateTime(_hoje.year, _hoje.month - 1, 10),
+      pagoEm: DateTime(_hoje.year, _hoje.month - 1, 5),
+    ),
+    Mensalidade(
+      id: 'me3',
+      alunoId: 'a1',
       competencia: DateTime(_hoje.year, _hoje.month, 1),
       valor: 250,
-      vencimento: DateTime(_hoje.year, _hoje.month, 10),
-      pagoEm: DateTime(_hoje.year, _hoje.month, 5),
+      vencimento: DateTime(_hoje.year, _hoje.month, 25),
     ),
   ];
 
