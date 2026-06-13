@@ -28,6 +28,57 @@ Future<String> _resolveAlunoId(String alunoId) async {
   return linha['id'] as String;
 }
 
+/// Nomes dos exercícios da biblioteca mockada, usados para resolver os
+/// sentinelas 'e1', 'e2', ... para os ids reais em `exercicios`.
+const _nomesExerciciosMock = {
+  'e1': 'Supino reto',
+  'e2': 'Supino inclinado',
+  'e3': 'Crucifixo',
+  'e4': 'Crossover',
+  'e5': 'Puxada frontal',
+  'e6': 'Remada curvada',
+  'e7': 'Remada baixa',
+  'e8': 'Barra fixa',
+  'e9': 'Agachamento livre',
+  'e10': 'Leg press 45°',
+  'e11': 'Cadeira extensora',
+  'e12': 'Mesa flexora',
+  'e13': 'Stiff',
+  'e14': 'Panturrilha em pé',
+  'e15': 'Avanço',
+  'e16': 'Desenvolvimento militar',
+  'e17': 'Elevação lateral',
+  'e18': 'Elevação frontal',
+  'e19': 'Encolhimento',
+  'e20': 'Rosca direta',
+  'e21': 'Rosca alternada',
+  'e22': 'Rosca martelo',
+  'e23': 'Tríceps testa',
+  'e24': 'Tríceps corda',
+  'e25': 'Mergulho no banco',
+  'e26': 'Prancha',
+  'e27': 'Abdominal infra',
+  'e28': 'Elevação de pernas',
+  'e29': 'Esteira (HIIT)',
+  'e30': 'Bicicleta ergométrica',
+};
+
+/// As telas do aluno usam ids mockados ('e1', 'e2', ...) para se referir a
+/// exercícios da biblioteca; aqui são resolvidos para os ids reais em
+/// `exercicios`, pelo nome. Retorna null se não houver exercício
+/// correspondente (ex.: id mockado sem equivalente cadastrado).
+Future<String?> _resolveExercicioId(String exercicioId) async {
+  final nome = _nomesExerciciosMock[exercicioId];
+  if (nome == null) return exercicioId;
+  final linha = await _db
+      .from('exercicios')
+      .select('id')
+      .eq('nome', nome)
+      .limit(1)
+      .maybeSingle();
+  return linha?['id'] as String?;
+}
+
 class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<Usuario> entrarComEmailSenha(String email, String senha) async {
@@ -935,11 +986,13 @@ class SupabaseEvolucaoRepository implements EvolucaoRepository {
 
   @override
   Future<List<RegistroCarga>> cargas(String alunoId, String exercicioId) async {
+    final idExercicio = await _resolveExercicioId(exercicioId);
+    if (idExercicio == null) return [];
     final linhas = await _db
         .from('registros_carga')
         .select()
         .eq('aluno_id', await _resolveAlunoId(alunoId))
-        .eq('exercicio_id', exercicioId)
+        .eq('exercicio_id', idExercicio)
         .order('data', ascending: true);
     return [
       for (final l in linhas)
