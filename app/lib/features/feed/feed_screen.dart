@@ -317,22 +317,25 @@ class _PostagemCard extends StatelessWidget {
             Text(p.texto),
             if (p.fotoBytes != null || p.fotoUrl != null) ...[
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: p.fotoBytes != null
-                    ? Image.memory(Uint8List.fromList(p.fotoBytes!),
-                        width: double.infinity,
-                        height: 220,
-                        fit: BoxFit.cover)
-                    : Image.network(p.fotoUrl!,
-                        width: double.infinity,
-                        height: 220,
-                        fit: BoxFit.cover,
-                        errorBuilder: (contexto, erro, pilha) =>
-                            const SizedBox(
-                                height: 80,
-                                child: Center(
-                                    child: Icon(Icons.broken_image)))),
+              GestureDetector(
+                onTap: () => _abrirFoto(context, p),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: p.fotoBytes != null
+                      ? Image.memory(Uint8List.fromList(p.fotoBytes!),
+                          width: double.infinity,
+                          height: 220,
+                          fit: BoxFit.cover)
+                      : Image.network(p.fotoUrl!,
+                          width: double.infinity,
+                          height: 220,
+                          fit: BoxFit.cover,
+                          errorBuilder: (contexto, erro, pilha) =>
+                              const SizedBox(
+                                  height: 80,
+                                  child: Center(
+                                      child: Icon(Icons.broken_image)))),
+                ),
               ),
             ],
             const SizedBox(height: 6),
@@ -370,6 +373,50 @@ class _PostagemCard extends StatelessWidget {
                 ],
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _abrirFoto(BuildContext context, Postagem p) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (context, _, __) => _VisualizadorFoto(
+          fotoBytes: p.fotoBytes,
+          fotoUrl: p.fotoUrl,
+        ),
+      ),
+    );
+  }
+}
+
+/// Visualização em tela cheia de uma foto do feed, com zoom/pan.
+class _VisualizadorFoto extends StatelessWidget {
+  const _VisualizadorFoto({this.fotoBytes, this.fotoUrl});
+
+  final List<int>? fotoBytes;
+  final String? fotoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          maxScale: 5,
+          child: fotoBytes != null
+              ? Image.memory(Uint8List.fromList(fotoBytes!))
+              : Image.network(fotoUrl!,
+                  errorBuilder: (context, erro, pilha) => const Icon(
+                      Icons.broken_image,
+                      color: Colors.white,
+                      size: 64)),
         ),
       ),
     );
