@@ -8,6 +8,8 @@ import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import '../aluno/perfil_screen.dart';
+import '../personal/financeiro_config_screen.dart';
+import '../personal/perfil_personal_screen.dart';
 import 'politicas_conteudo.dart';
 
 Future<void> _abrirEmail(BuildContext context, {String? assunto}) async {
@@ -68,18 +70,29 @@ class MaisScreen extends ConsumerWidget {
                   subtitle: Text(
                     sessao.perfil == PerfilUsuario.aluno
                         ? '${sessao.email}\nToque para ver e editar seu perfil'
-                        : sessao.email,
+                        : '${sessao.email}\nToque para ver e editar seu perfil',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  trailing: sessao.perfil == PerfilUsuario.aluno
-                      ? const Icon(Icons.chevron_right)
-                      : null,
+                  trailing: const Icon(Icons.chevron_right),
                   onTap: sessao.perfil == PerfilUsuario.aluno
                       ? () => abrir(const PerfilAlunoScreen())
-                      : null,
+                      : () => abrir(const PerfilPersonalScreen()),
                 ),
               ),
+            if (sessao?.perfil == PerfilUsuario.personal) ...[
+              const SectionTitle('Conta'),
+              _ItemMenu(
+                icone: Icons.person_outline,
+                titulo: 'Meu perfil',
+                aoTocar: () => abrir(const PerfilPersonalScreen()),
+              ),
+              _ItemMenu(
+                icone: Icons.attach_money,
+                titulo: 'Financeiro',
+                aoTocar: () => abrir(const FinanceiroConfigScreen()),
+              ),
+            ],
             const SectionTitle('Suporte'),
             _ItemMenu(
               icone: Icons.help_outline,

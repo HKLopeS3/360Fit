@@ -13,14 +13,76 @@ class Usuario {
     required this.nome,
     required this.email,
     required this.perfil,
+    this.cref,
+    this.cpf,
+    this.fotoUrl,
+    this.codigoConvite,
   });
 
   final String id;
   final String nome;
   final String email;
   final PerfilUsuario perfil;
+  final String? cref;
+  final String? cpf;
+  final String? fotoUrl;
+  final String? codigoConvite;
 
   String get primeiroNome => nome.split(' ').first;
+
+  Usuario copyWith({
+    String? nome,
+    String? cref,
+    String? cpf,
+    String? fotoUrl,
+    String? codigoConvite,
+  }) {
+    return Usuario(
+      id: id,
+      nome: nome ?? this.nome,
+      email: email,
+      perfil: perfil,
+      cref: cref ?? this.cref,
+      cpf: cpf ?? this.cpf,
+      fotoUrl: fotoUrl ?? this.fotoUrl,
+      codigoConvite: codigoConvite ?? this.codigoConvite,
+    );
+  }
+}
+
+/// Configuração financeira/comercial da empresa do profissional.
+class ConfiguracaoEmpresa {
+  const ConfiguracaoEmpresa({
+    required this.plano,
+    required this.mensalidadeValor,
+    required this.mensalidadeValidadeDias,
+    this.assinaturaValidade,
+  });
+
+  /// Plano de assinatura do sistema ('basic', 'pro', 'premium').
+  final String plano;
+
+  /// Valor cobrado do aluno pelo acompanhamento profissional.
+  final double mensalidadeValor;
+
+  /// Validade da mensalidade do aluno, em dias.
+  final int mensalidadeValidadeDias;
+
+  /// Validade da assinatura do sistema (do plano da empresa).
+  final DateTime? assinaturaValidade;
+
+  ConfiguracaoEmpresa copyWith({
+    double? mensalidadeValor,
+    int? mensalidadeValidadeDias,
+  }) {
+    return ConfiguracaoEmpresa(
+      plano: plano,
+      mensalidadeValor: mensalidadeValor ?? this.mensalidadeValor,
+      mensalidadeValidadeDias:
+          mensalidadeValidadeDias ?? this.mensalidadeValidadeDias,
+      assinaturaValidade: assinaturaValidade,
+    );
+  }
 }
 
 class Aluno {

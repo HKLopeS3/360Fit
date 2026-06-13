@@ -27,6 +27,15 @@ abstract interface class AuthRepository {
 
   /// Verifica se um código de convite existe e ainda não foi usado.
   Future<bool> validarCodigoConvite(String codigo);
+
+  /// Atualiza dados do perfil do usuário logado. Campos nulos não são
+  /// alterados; [fotoBytes], quando informado, atualiza a foto de perfil.
+  Future<Usuario> atualizarPerfil({
+    String? nome,
+    String? cref,
+    String? cpf,
+    List<int>? fotoBytes,
+  });
 }
 
 abstract interface class AlunoRepository {
@@ -171,4 +180,13 @@ abstract interface class FinanceiroRepository {
 
   /// Mensalidades em atraso de toda a carteira.
   Future<List<Mensalidade>> inadimplentes();
+
+  /// Configuração financeira/comercial da empresa do usuário logado.
+  Future<ConfiguracaoEmpresa> configuracaoEmpresa();
+
+  /// Atualiza o valor e a validade da mensalidade cobrada dos alunos.
+  Future<void> atualizarConfiguracaoEmpresa({
+    required double mensalidadeValor,
+    required int mensalidadeValidadeDias,
+  });
 }

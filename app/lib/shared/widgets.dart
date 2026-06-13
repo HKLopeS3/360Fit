@@ -263,6 +263,7 @@ class ParDeMetricas extends StatelessWidget {
 // ------------------------------------------------------------------ formatos
 
 final fmtDiaMes = DateFormat('dd/MM');
+final fmtDataCurta = DateFormat('dd/MM/yyyy');
 final fmtDataCompleta = DateFormat("EEEE, d 'de' MMMM");
 final fmtDataHora = DateFormat("dd/MM 'às' HH:mm");
 final fmtHora = DateFormat('HH:mm');

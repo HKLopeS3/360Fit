@@ -65,10 +65,28 @@ class SessaoNotifier extends Notifier<Usuario?> {
     await ref.read(authRepositoryProvider).sair();
     state = null;
   }
+
+  Future<void> atualizarPerfil({
+    String? nome,
+    String? cref,
+    String? cpf,
+    List<int>? fotoBytes,
+  }) async {
+    state = await ref.read(authRepositoryProvider).atualizarPerfil(
+          nome: nome,
+          cref: cref,
+          cpf: cpf,
+          fotoBytes: fotoBytes,
+        );
+  }
 }
 
 final sessaoProvider =
     NotifierProvider<SessaoNotifier, Usuario?>(SessaoNotifier.new);
+
+final configuracaoEmpresaProvider = FutureProvider<ConfiguracaoEmpresa>(
+  (ref) => ref.watch(financeiroRepositoryProvider).configuracaoEmpresa(),
+);
 
 /// Id do aluno vinculado ao usuário logado como aluno (mock: Carlos = a1).
 const alunoLogadoId = 'a1';

@@ -91,7 +91,45 @@ class SupabaseAuthRepository implements AuthRepository {
       // admin_empresa usa a visão do profissional até o painel admin existir.
       perfil:
           papel == 'aluno' ? PerfilUsuario.aluno : PerfilUsuario.personal,
+      cref: dados['cref'] as String?,
+      cpf: dados['cpf'] as String?,
+      fotoUrl: dados['foto_url'] as String?,
+      codigoConvite: dados['codigo_convite'] as String?,
     );
+  }
+
+  @override
+  Future<Usuario> atualizarPerfil({
+    String? nome,
+    String? cref,
+    String? cpf,
+    List<int>? fotoBytes,
+  }) async {
+    final userId = _db.auth.currentUser!.id;
+    final atualizacoes = <String, dynamic>{
+      if (nome != null) 'nome': nome,
+      if (cref != null) 'cref': cref,
+      if (cpf != null) 'cpf': cpf,
+    };
+    if (fotoBytes != null) {
+      final perfil = await _db
+          .from('perfis')
+          .select('empresa_id')
+          .eq('id', userId)
+          .single();
+      final caminho = '${perfil['empresa_id']}/$userId.jpg';
+      await _db.storage.from('avatares').uploadBinary(
+          caminho, Uint8List.fromList(fotoBytes),
+          fileOptions: const FileOptions(
+              contentType: 'image/jpeg', upsert: true));
+      atualizacoes['foto_url'] = await _db.storage
+          .from('avatares')
+          .createSignedUrl(caminho, 60 * 60 * 24 * 365);
+    }
+    if (atualizacoes.isNotEmpty) {
+      await _db.from('perfis').update(atualizacoes).eq('id', userId);
+    }
+    return _usuarioDoPerfil(userId);
   }
 }
 
@@ -702,6 +740,43 @@ class SupabaseFinanceiroRepository implements FinanceiroRepository {
         .isFilter('pago_em', null)
         .lt('vencimento', DateTime.now().toIso8601String().substring(0, 10));
     return [for (final l in linhas) _mapear(l)];
+  }
+
+  Future<String> _empresaDoUsuario() async {
+    final perfil = await _db
+        .from('perfis')
+        .select('empresa_id')
+        .eq('id', _db.auth.currentUser!.id)
+        .single();
+    return perfil['empresa_id'] as String;
+  }
+
+  @override
+  Future<ConfiguracaoEmpresa> configuracaoEmpresa() async {
+    final empresa = await _db
+        .from('empresas')
+        .select()
+        .eq('id', await _empresaDoUsuario())
+        .single();
+    return ConfiguracaoEmpresa(
+      plano: empresa['plano'] as String,
+      mensalidadeValor: (empresa['mensalidade_valor'] as num).toDouble(),
+      mensalidadeValidadeDias: empresa['mensalidade_validade_dias'] as int,
+      assinaturaValidade: empresa['assinatura_validade'] == null
+          ? null
+          : DateTime.parse(empresa['assinatura_validade'] as String),
+    );
+  }
+
+  @override
+  Future<void> atualizarConfiguracaoEmpresa({
+    required double mensalidadeValor,
+    required int mensalidadeValidadeDias,
+  }) async {
+    await _db.from('empresas').update({
+      'mensalidade_valor': mensalidadeValor,
+      'mensalidade_validade_dias': mensalidadeValidadeDias,
+    }).eq('id', await _empresaDoUsuario());
   }
 }
 

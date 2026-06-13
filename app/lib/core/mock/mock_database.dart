@@ -25,11 +25,24 @@ class MockDatabase {
     perfil: PerfilUsuario.aluno,
   );
 
-  late final Usuario usuarioPersonal = const Usuario(
+  Usuario usuarioPersonal = const Usuario(
     id: 'u-personal-1',
     nome: 'João Silva',
     email: 'joao.silva@360fit.com.br',
     perfil: PerfilUsuario.personal,
+    cref: '012345-G/SP',
+    cpf: '123.456.789-00',
+    codigoConvite: 'DEMO-PERSONAL1',
+  );
+
+  // ---------------------------------------------------------- configuração
+
+  late ConfiguracaoEmpresa configuracaoEmpresa = ConfiguracaoEmpresa(
+    plano: 'basic',
+    mensalidadeValor: 150,
+    mensalidadeValidadeDias: 30,
+    assinaturaValidade: DateTime(_hoje.year, _hoje.month, _hoje.day)
+        .add(const Duration(days: 30)),
   );
 
   // ------------------------------------------------------------------ alunos

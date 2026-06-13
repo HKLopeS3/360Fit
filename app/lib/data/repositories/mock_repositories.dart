@@ -66,6 +66,22 @@ class MockAuthRepository implements AuthRepository {
       perfil: PerfilUsuario.personal,
     ));
   }
+
+  @override
+  Future<Usuario> atualizarPerfil({
+    String? nome,
+    String? cref,
+    String? cpf,
+    List<int>? fotoBytes,
+  }) {
+    _db.usuarioPersonal = _db.usuarioPersonal.copyWith(
+      nome: nome,
+      cref: cref,
+      cpf: cpf,
+      fotoUrl: fotoBytes != null ? 'mock://avatar' : null,
+    );
+    return _simulaRede(_db.usuarioPersonal);
+  }
 }
 
 class MockAlunoRepository implements AlunoRepository {
@@ -501,4 +517,20 @@ class MockFinanceiroRepository implements FinanceiroRepository {
   Future<List<Mensalidade>> inadimplentes() => _simulaRede(
         _db.mensalidades.where((m) => m.atrasada).toList(),
       );
+
+  @override
+  Future<ConfiguracaoEmpresa> configuracaoEmpresa() =>
+      _simulaRede(_db.configuracaoEmpresa);
+
+  @override
+  Future<void> atualizarConfiguracaoEmpresa({
+    required double mensalidadeValor,
+    required int mensalidadeValidadeDias,
+  }) {
+    _db.configuracaoEmpresa = _db.configuracaoEmpresa.copyWith(
+      mensalidadeValor: mensalidadeValor,
+      mensalidadeValidadeDias: mensalidadeValidadeDias,
+    );
+    return _simulaRede(null);
+  }
 }
