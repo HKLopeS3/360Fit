@@ -314,13 +314,18 @@ class Treino {
   final List<int> diasSemana; // DateTime.monday..sunday
   final List<ItemTreino> itens;
 
-  Treino copyWith({List<ItemTreino>? itens, String? foco, String? nome}) {
+  Treino copyWith({
+    List<ItemTreino>? itens,
+    String? foco,
+    String? nome,
+    List<int>? diasSemana,
+  }) {
     return Treino(
       id: id,
       alunoId: alunoId,
       nome: nome ?? this.nome,
       foco: foco ?? this.foco,
-      diasSemana: diasSemana,
+      diasSemana: diasSemana ?? this.diasSemana,
       itens: itens ?? this.itens,
     );
   }

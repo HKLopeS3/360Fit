@@ -5,6 +5,16 @@ import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 
+const _nomesDias = {
+  DateTime.monday: 'Seg',
+  DateTime.tuesday: 'Ter',
+  DateTime.wednesday: 'Qua',
+  DateTime.thursday: 'Qui',
+  DateTime.friday: 'Sex',
+  DateTime.saturday: 'Sáb',
+  DateTime.sunday: 'Dom',
+};
+
 /// Montagem/edição de treino de um aluno a partir da biblioteca de exercícios.
 class PrescricaoScreen extends ConsumerStatefulWidget {
   const PrescricaoScreen({super.key});
@@ -69,6 +79,15 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
   void _removerItem(int indice) {
     final itens = List.of(_treino!.itens)..removeAt(indice);
     setState(() => _treino = _treino!.copyWith(itens: itens));
+  }
+
+  Future<void> _editarTreino() async {
+    final editado = await showDialog<Treino>(
+      context: context,
+      builder: (_) => _EditarTreinoDialog(treino: _treino!),
+    );
+    if (editado == null) return;
+    setState(() => _treino = editado);
   }
 
   Future<void> _salvar() async {
@@ -138,18 +157,36 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
             if (_treino != null) ...[
               SectionTitle(
                 'Exercícios — ${_treino!.nome}',
-                trailing: FilledButton.icon(
-                  onPressed: _salvando || _treino!.itens.isEmpty
-                      ? null
-                      : _salvar,
-                  icon: _salvando
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.save, size: 18),
-                  label: const Text('Salvar'),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Editar nome, subtítulo e dias',
+                      onPressed: _editarTreino,
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                    const SizedBox(width: 4),
+                    FilledButton.icon(
+                      onPressed: _salvando || _treino!.itens.isEmpty
+                          ? null
+                          : _salvar,
+                      icon: _salvando
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save, size: 18),
+                      label: const Text('Salvar'),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  '${_treino!.foco} · ${_treino!.diasSemana.map((d) => _nomesDias[d]).join(', ')}',
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ),
               if (_treino!.itens.isEmpty)
@@ -548,6 +585,98 @@ class _EditarItemDialogState extends State<_EditarItemDialog> {
                   _metodo == MetodoTreino.biSet ? _agrupamento : 0,
             ),
           ),
+          child: const Text('Aplicar'),
+        ),
+      ],
+    );
+  }
+}
+
+class _EditarTreinoDialog extends StatefulWidget {
+  const _EditarTreinoDialog({required this.treino});
+
+  final Treino treino;
+
+  @override
+  State<_EditarTreinoDialog> createState() => _EditarTreinoDialogState();
+}
+
+class _EditarTreinoDialogState extends State<_EditarTreinoDialog> {
+  late final TextEditingController _nome =
+      TextEditingController(text: widget.treino.nome);
+  late final TextEditingController _foco =
+      TextEditingController(text: widget.treino.foco);
+  late final Set<int> _dias = widget.treino.diasSemana.toSet();
+
+  @override
+  void dispose() {
+    _nome.dispose();
+    _foco.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Editar treino'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _nome,
+              autofocus: true,
+              decoration: const InputDecoration(
+                  labelText: 'Nome (ex.: Treino A)'),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _foco,
+              decoration: const InputDecoration(
+                  labelText: 'Subtítulo (ex.: Peito e Tríceps)'),
+            ),
+            const SizedBox(height: 12),
+            const Text('Dias da semana'),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final dia in _nomesDias.entries)
+                  FilterChip(
+                    label: Text(dia.value),
+                    selected: _dias.contains(dia.key),
+                    onSelected: (selecionado) => setState(() {
+                      if (selecionado) {
+                        _dias.add(dia.key);
+                      } else {
+                        _dias.remove(dia.key);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final nome = _nome.text.trim();
+            final foco = _foco.text.trim();
+            if (nome.isEmpty || _dias.isEmpty) return;
+            final diasOrdenados = _dias.toList()..sort();
+            Navigator.of(context).pop(widget.treino.copyWith(
+              nome: nome,
+              foco: foco.isEmpty ? widget.treino.foco : foco,
+              diasSemana: diasOrdenados,
+            ));
+          },
           child: const Text('Aplicar'),
         ),
       ],
