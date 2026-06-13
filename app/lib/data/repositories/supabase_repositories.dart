@@ -697,10 +697,11 @@ class SupabaseFinanceiroRepository implements FinanceiroRepository {
 
   @override
   Future<List<Mensalidade>> doAluno(String alunoId) async {
+    final id = await _resolveAlunoId(alunoId);
     final linhas = await _db
         .from('mensalidades')
         .select()
-        .eq('aluno_id', alunoId)
+        .eq('aluno_id', id)
         .order('competencia', ascending: false);
     return [for (final l in linhas) _mapear(l)];
   }
