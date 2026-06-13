@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import 'test_helpers.dart' as helpers;
+
 Future<void> bombear(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 600));
   await tester.pumpAndSettle();
@@ -30,19 +32,18 @@ void main() {
     Intl.defaultLocale = 'pt_BR';
   });
 
-  Future<void> entrarComo(WidgetTester tester, String botao) async {
+  Future<void> entrarComo(WidgetTester tester, String email) async {
     await tester.pumpWidget(const ProviderScope(child: Fit360App()));
     router.go('/login');
     await tester.pumpAndSettle();
-    await tester.tap(find.text(botao));
-    await bombear(tester);
+    await helpers.entrarComo(tester, email);
   }
 
   testWidgets('aluno confirma presença na agenda', (tester) async {
     tester.view.physicalSize =
         const Size(420, 1100) * tester.view.devicePixelRatio;
     addTearDown(tester.view.resetPhysicalSize);
-    await entrarComo(tester, 'Entrar como Aluno');
+    await entrarComo(tester, helpers.emailAluno);
 
     await tester.tap(find.text('Agenda').last);
     await bombear(tester);
@@ -56,7 +57,7 @@ void main() {
     tester.view.physicalSize =
         const Size(420, 1100) * tester.view.devicePixelRatio;
     addTearDown(tester.view.resetPhysicalSize);
-    await entrarComo(tester, 'Entrar como Personal');
+    await entrarComo(tester, helpers.emailPersonal);
 
     await tester.tap(find.text('Agenda').last);
     await bombear(tester);
@@ -103,7 +104,7 @@ void main() {
     tester.view.physicalSize =
         const Size(420, 1100) * tester.view.devicePixelRatio;
     addTearDown(tester.view.resetPhysicalSize);
-    await entrarComo(tester, 'Entrar como Personal');
+    await entrarComo(tester, helpers.emailPersonal);
 
     await tester.tap(find.text('Alunos').last);
     await bombear(tester);
@@ -116,6 +117,16 @@ void main() {
     await tester.enterText(
         find.widgetWithText(TextFormField, 'Idade'), '27');
     await rolarETocar(tester, find.text('Cadastrar aluno'));
+    // Não usa bombear(): enquanto o dialog está aberto, o botão de salvar
+    // ainda mostra um CircularProgressIndicator indeterminado, e
+    // pumpAndSettle nunca settla com essa animação em execução.
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pump();
+
+    // Dialog com o código de convite do novo aluno.
+    expect(find.text('Tatiane Moraes cadastrado!'), findsOneWidget);
+    await tester.tap(find.text('Entendi'));
+    await tester.pump(const Duration(milliseconds: 300));
     await bombear(tester);
 
     expect(find.text('Meus alunos'), findsOneWidget);
@@ -134,7 +145,10 @@ void main() {
     tester.view.physicalSize =
         const Size(420, 1100) * tester.view.devicePixelRatio;
     addTearDown(tester.view.resetPhysicalSize);
-    await entrarComo(tester, 'Entrar como Aluno');
+    await entrarComo(tester, helpers.emailAluno);
+    // Garante que o provider de notificações (que encadeia treino do dia +
+    // agenda) já resolveu antes de abrir o sininho.
+    await bombear(tester);
 
     // Notificações: sininho com badge → bottom sheet.
     await tester.tap(find.byIcon(Icons.notifications_outlined));

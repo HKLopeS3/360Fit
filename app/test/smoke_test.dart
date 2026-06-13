@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import 'test_helpers.dart';
+
 Future<void> _bombearAteCarregar(WidgetTester tester) async {
   // Avança a latência mock (350ms) e as animações.
   await tester.pump(const Duration(milliseconds: 600));
@@ -23,20 +25,18 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tela de login.
-    expect(find.text('Entrar como Aluno'), findsOneWidget);
-    expect(find.text('Entrar como Personal'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Email'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
 
     // Entra como aluno → aba Hoje.
-    await tester.tap(find.text('Entrar como Aluno'));
-    await _bombearAteCarregar(tester);
+    await entrarComo(tester, emailAluno);
     expect(find.textContaining('Olá, Carlos'), findsOneWidget);
     expect(find.text('Evolução'), findsOneWidget); // bottom nav
 
     // Sai e entra como personal → dashboard.
     await tester.tap(find.byIcon(Icons.logout).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Entrar como Personal'));
-    await _bombearAteCarregar(tester);
+    await entrarComo(tester, emailPersonal);
     expect(find.textContaining('Olá, João'), findsOneWidget);
     expect(find.text('Alunos ativos'), findsOneWidget);
 

@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import 'test_helpers.dart';
+
 Future<void> bombear(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 600));
   await tester.pumpAndSettle();
@@ -26,8 +28,7 @@ void main() {
     router.go('/login');
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Entrar como Aluno'));
-    await bombear(tester);
+    await entrarComo(tester, emailAluno);
 
     // Inicia o treino do dia.
     expect(find.text('Iniciar treino'), findsOneWidget);

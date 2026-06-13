@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
 
+import 'test_helpers.dart';
+
 /// Renderiza as principais telas em mobile (375), tablet (768) e
 /// desktop (1280). Qualquer overflow de layout falha o teste.
 void main() {
@@ -36,8 +38,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // ------------------------------------------------------------- aluno
-      await tester.tap(find.text('Entrar como Aluno'));
-      await bombear(tester);
+      await entrarComo(tester, emailAluno);
       for (final aba in ['Evolução', 'Agenda', 'Chat', 'Mais', 'Hoje']) {
         await tester.tap(find.text(aba).last);
         await bombear(tester);
@@ -48,8 +49,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // ---------------------------------------------------------- personal
-      await tester.tap(find.text('Entrar como Personal'));
-      await bombear(tester);
+      await entrarComo(tester, emailPersonal);
       for (final aba in ['Alunos', 'Prescrição', 'Agenda', 'Mais']) {
         await tester.tap(find.text(aba).last);
         await bombear(tester);
