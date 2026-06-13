@@ -1,21 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class AlunoShell extends StatelessWidget {
+import '../../data/providers.dart';
+
+class AlunoShell extends ConsumerWidget {
   const AlunoShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
 
+  /// Providers a invalidar ao abrir cada aba, para que os dados sejam
+  /// buscados novamente no banco a cada visita.
+  void _atualizarDadosDaAba(WidgetRef ref, int i) {
+    switch (i) {
+      case 0: // Hoje
+        ref.invalidate(treinoDoDiaProvider);
+        ref.invalidate(historicoConcluidosProvider(alunoLogadoId));
+        ref.invalidate(treinosDoAlunoProvider(alunoLogadoId));
+        ref.invalidate(aguaProvider);
+      case 1: // Evolução
+        ref.invalidate(pesosProvider(alunoLogadoId));
+        ref.invalidate(avaliacoesProvider(alunoLogadoId));
+        ref.invalidate(fotosEvolucaoProvider(alunoLogadoId));
+      case 2: // Agenda
+        ref.invalidate(agendaProvider(alunoLogadoId));
+      case 4: // Mais
+        ref.invalidate(alunoProvider(alunoLogadoId));
+        ref.invalidate(mensalidadesProvider(alunoLogadoId));
+        ref.invalidate(medalhasProvider);
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: shell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) => shell.goBranch(
-          i,
-          initialLocation: i == shell.currentIndex,
-        ),
+        onDestinationSelected: (i) {
+          _atualizarDadosDaAba(ref, i);
+          shell.goBranch(
+            i,
+            initialLocation: i == shell.currentIndex,
+          );
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.fitness_center_outlined),
