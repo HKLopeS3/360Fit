@@ -45,22 +45,25 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
   }
 
   Future<void> _adicionarExercicio() async {
-    final exercicio = await showModalBottomSheet<Exercicio>(
+    final selecionados = await showModalBottomSheet<List<Exercicio>>(
       context: context,
       isScrollControlled: true,
       builder: (_) => const _SeletorExercicio(),
     );
-    if (exercicio == null || _treino == null) return;
+    if (selecionados == null || selecionados.isEmpty || _treino == null) return;
+    final idsExistentes = _treino!.itens.map((i) => i.exercicioId).toSet();
+    final novos = selecionados
+        .where((e) => !idsExistentes.contains(e.id))
+        .map((e) => ItemTreino(
+              exercicioId: e.id,
+              series: 3,
+              repeticoes: '10-12',
+              cargaKg: 0,
+            ))
+        .toList();
+    if (novos.isEmpty) return;
     setState(() {
-      _treino = _treino!.copyWith(itens: [
-        ..._treino!.itens,
-        ItemTreino(
-          exercicioId: exercicio.id,
-          series: 3,
-          repeticoes: '10-12',
-          cargaKg: 0,
-        ),
-      ]);
+      _treino = _treino!.copyWith(itens: [..._treino!.itens, ...novos]);
     });
   }
 
@@ -315,6 +318,7 @@ class _SeletorExercicio extends ConsumerStatefulWidget {
 class _SeletorExercicioState extends ConsumerState<_SeletorExercicio> {
   String _busca = '';
   String? _grupo;
+  final Set<String> _selecionados = {};
 
   Future<void> _editarVideo(Exercicio e) async {
     final controller = TextEditingController(text: e.videoUrl);
@@ -416,11 +420,17 @@ class _SeletorExercicioState extends ConsumerState<_SeletorExercicio> {
                   itemCount: filtrados.length,
                   itemBuilder: (context, i) {
                     final e = filtrados[i];
-                    return ListTile(
-                      leading: const Icon(Icons.fitness_center),
-                      title: Text(e.nome),
-                      subtitle: Text('${e.grupoMuscular} · ${e.equipamento}'),
-                      trailing: IconButton(
+                    final selecionado = _selecionados.contains(e.id);
+                    return CheckboxListTile(
+                      value: selecionado,
+                      onChanged: (_) => setState(() {
+                        if (selecionado) {
+                          _selecionados.remove(e.id);
+                        } else {
+                          _selecionados.add(e.id);
+                        }
+                      }),
+                      secondary: IconButton(
                         tooltip: e.videoUrl.isEmpty
                             ? 'Adicionar vídeo demonstrativo'
                             : 'Vídeo cadastrado — editar',
@@ -434,9 +444,31 @@ class _SeletorExercicioState extends ConsumerState<_SeletorExercicio> {
                         ),
                         onPressed: () => _editarVideo(e),
                       ),
-                      onTap: () => Navigator.of(context).pop(e),
+                      title: Text(e.nome),
+                      subtitle: Text('${e.grupoMuscular} · ${e.equipamento}'),
                     );
                   },
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: FilledButton.icon(
+                    onPressed: _selecionados.isEmpty
+                        ? null
+                        : () {
+                            final escolhidos = biblioteca
+                                .where((e) => _selecionados.contains(e.id))
+                                .toList();
+                            Navigator.of(context).pop(escolhidos);
+                          },
+                    icon: const Icon(Icons.add),
+                    label: Text(_selecionados.isEmpty
+                        ? 'Selecione exercícios'
+                        : 'Adicionar (${_selecionados.length})'),
+                    style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48)),
+                  ),
                 ),
               ),
             ],
