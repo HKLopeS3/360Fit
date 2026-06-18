@@ -61,6 +61,8 @@ abstract interface class TreinoRepository {
 
   Future<void> salvar(Treino treino);
 
+  Future<void> excluir(String treinoId);
+
   /// Registra a conclusão de um treino executado pelo aluno.
   Future<void> concluirTreino(TreinoConcluido conclusao);
 

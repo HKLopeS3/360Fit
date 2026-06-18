@@ -176,6 +176,13 @@ class MockTreinoRepository implements TreinoRepository {
   }
 
   @override
+  @override
+  Future<void> excluir(String treinoId) {
+    _db.treinos.removeWhere((t) => t.id == treinoId);
+    return _simulaRede(null);
+  }
+
+  @override
   Future<void> concluirTreino(TreinoConcluido conclusao) {
     _db.treinosConcluidos.add(conclusao);
     return _simulaRede(null);

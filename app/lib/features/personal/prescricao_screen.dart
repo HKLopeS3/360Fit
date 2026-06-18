@@ -93,6 +93,38 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
     setState(() => _treino = editado);
   }
 
+  Future<void> _excluirTreino() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Excluir treino'),
+        content: Text(
+            'Tem certeza que deseja excluir "${_treino!.nome}"? Esta ação não pode ser desfeita.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Excluir'),
+          ),
+        ],
+      ),
+    );
+    if (confirmar != true) return;
+    final alunoId = _treino!.alunoId;
+    final treinoId = _treino!.id;
+    if (!treinoId.startsWith('t-novo-')) {
+      await ref.read(treinoRepositoryProvider).excluir(treinoId);
+    }
+    ref.invalidate(treinosDoAlunoProvider(alunoId));
+    ref.invalidate(treinoDoDiaProvider);
+    setState(() => _treino = null);
+  }
+
   Future<void> _salvar() async {
     if (_treino == null) return;
     setState(() => _salvando = true);
@@ -167,6 +199,12 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
                       tooltip: 'Editar nome, subtítulo e dias',
                       onPressed: _editarTreino,
                       icon: const Icon(Icons.edit_outlined),
+                    ),
+                    IconButton(
+                      tooltip: 'Excluir treino',
+                      onPressed: _excluirTreino,
+                      icon: Icon(Icons.delete_outline,
+                          color: Theme.of(context).colorScheme.error),
                     ),
                     const SizedBox(width: 4),
                     FilledButton.icon(

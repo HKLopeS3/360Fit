@@ -359,6 +359,13 @@ class SupabaseTreinoRepository implements TreinoRepository {
   }
 
   @override
+  @override
+  Future<void> excluir(String treinoId) async {
+    await _db.from('itens_treino').delete().eq('treino_id', treinoId);
+    await _db.from('treinos').delete().eq('id', treinoId);
+  }
+
+  @override
   Future<void> salvar(Treino treino) async {
     final empresa = await _empresaDoUsuario();
     final dados = {
