@@ -57,13 +57,42 @@ class SessaoNotifier extends Notifier<Usuario?> {
     final usuario = await ref
         .read(authRepositoryProvider)
         .entrarComEmailSenha(email, senha);
+    _limparCache();
     state = usuario;
     return usuario;
   }
 
   Future<void> sair() async {
     await ref.read(authRepositoryProvider).sair();
+    _limparCache();
     state = null;
+  }
+
+  /// Invalida todos os providers de dados para evitar flash de dados
+  /// de uma sessão anterior quando um novo usuário faz login.
+  void _limparCache() {
+    ref.invalidate(alunosProvider);
+    ref.invalidate(alunoProvider);
+    ref.invalidate(treinoDoDiaProvider);
+    ref.invalidate(treinosDoAlunoProvider);
+    ref.invalidate(treinosSemanaProvider);
+    ref.invalidate(alertasProvider);
+    ref.invalidate(programasProvider);
+    ref.invalidate(historicoConcluidosProvider);
+    ref.invalidate(agendaProvider);
+    ref.invalidate(pesosProvider);
+    ref.invalidate(avaliacoesProvider);
+    ref.invalidate(fotosEvolucaoProvider);
+    ref.invalidate(mensalidadesProvider);
+    ref.invalidate(aguaProvider);
+    ref.invalidate(medalhasProvider);
+    ref.invalidate(anamneseProvider);
+    ref.invalidate(fotosPosturaProvider);
+    ref.invalidate(cargasProvider);
+    ref.invalidate(feedProvider);
+    ref.invalidate(postagensPendentesProvider);
+    ref.invalidate(configuracaoEmpresaProvider);
+    ref.invalidate(bibliotecaExerciciosProvider);
   }
 
   Future<void> atualizarPerfil({
