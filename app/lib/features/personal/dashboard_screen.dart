@@ -24,6 +24,7 @@ class DashboardScreen extends ConsumerWidget {
           overflow: TextOverflow.ellipsis,
         ),
         actions: [
+          _NotificacoesBadge(),
           IconButton(
             tooltip: 'Feed da academia',
             icon: const Icon(Icons.dynamic_feed_outlined),
@@ -233,6 +234,137 @@ class _BarrasSemana extends StatelessWidget {
                 ),
               ],
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificacoesBadge extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final total = ref.watch(alertasProvider).valueOrNull?.length ?? 0;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          tooltip: 'Notificações',
+          icon: const Icon(Icons.notifications_outlined),
+          onPressed: () {
+            final container = ProviderScope.containerOf(context);
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (_) => UncontrolledProviderScope(
+                container: container,
+                child: const _PainelNotificacoes(),
+              ),
+            );
+          },
+        ),
+        if (total > 0)
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.error,
+                  shape: BoxShape.circle,
+                ),
+                constraints:
+                    const BoxConstraints(minWidth: 16, minHeight: 16),
+                child: Text(
+                  total > 99 ? '99+' : '$total',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _PainelNotificacoes extends ConsumerWidget {
+  const _PainelNotificacoes();
+
+  static const _icones = {
+    'dor': (Icons.favorite_border, Colors.red),
+    'sumido': (Icons.directions_run, Colors.orange),
+    'programa': (Icons.event_outlined, Colors.amber),
+    'financeiro': (Icons.attach_money, Colors.purple),
+    'aniversario': (Icons.cake_outlined, Colors.pink),
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final alertasAsync = ref.watch(alertasProvider);
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      maxChildSize: 0.92,
+      builder: (_, scrollController) => Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Row(children: [
+              const Icon(Icons.notifications_outlined),
+              const SizedBox(width: 8),
+              Text('Notificações',
+                  style: Theme.of(context).textTheme.titleMedium),
+            ]),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: alertasAsync.when(
+              loading: () =>
+                  const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Erro: $e')),
+              data: (alertas) {
+                if (alertas.isEmpty) {
+                  return const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.check_circle_outline,
+                            size: 48, color: Colors.green),
+                        SizedBox(height: 8),
+                        Text('Tudo em dia!'),
+                      ],
+                    ),
+                  );
+                }
+                return ListView.separated(
+                  controller: scrollController,
+                  itemCount: alertas.length,
+                  separatorBuilder: (_, __) =>
+                      const Divider(height: 1, indent: 56),
+                  itemBuilder: (_, i) {
+                    final a = alertas[i];
+                    final (icone, cor) = _icones[a.tipo] ??
+                        (Icons.info_outline, Colors.grey);
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: cor.withValues(alpha: 0.12),
+                        child: Icon(icone, color: cor, size: 20),
+                      ),
+                      title: Text(a.titulo,
+                          style: const TextStyle(fontSize: 14)),
+                      subtitle: Text(a.detalhe,
+                          style: const TextStyle(fontSize: 12)),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
