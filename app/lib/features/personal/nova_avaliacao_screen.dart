@@ -28,10 +28,17 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
   final _gordura = TextEditingController();
   final _massaMagra = TextEditingController();
   final _medidas = {
-    'Braço': TextEditingController(),
+    'Ombros': TextEditingController(),
+    'Peitoral': TextEditingController(),
+    'Braço relaxado': TextEditingController(),
+    'Braço contraído': TextEditingController(),
+    'Antebraço': TextEditingController(),
     'Cintura': TextEditingController(),
+    'Abdômen': TextEditingController(),
     'Quadril': TextEditingController(),
-    'Coxa': TextEditingController(),
+    'Coxa proximal': TextEditingController(),
+    'Coxa medial': TextEditingController(),
+    'Panturrilha': TextEditingController(),
   };
   final _observacoes = TextEditingController();
   bool _salvando = false;
@@ -399,23 +406,29 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
                   }),
                 ),
               const SectionTitle('Medidas (cm)'),
-              for (final medidas in [
-                ['Braço', 'Cintura'],
-                ['Quadril', 'Coxa'],
+              for (final par in [
+                ['Ombros', 'Peitoral'],
+                ['Braço relaxado', 'Braço contraído'],
+                ['Antebraço', 'Cintura'],
+                ['Abdômen', 'Quadril'],
+                ['Coxa proximal', 'Coxa medial'],
+                ['Panturrilha', null],
               ]) ...[
                 ParDeMetricas(
                   primeiro: TextFormField(
-                    controller: _medidas[medidas[0]],
+                    controller: _medidas[par[0]],
                     keyboardType: TextInputType.number,
-                    decoration: dec(medidas[0], sufixo: 'cm'),
+                    decoration: dec(par[0]!, sufixo: 'cm'),
                     validator: _validaOpcional,
                   ),
-                  segundo: TextFormField(
-                    controller: _medidas[medidas[1]],
-                    keyboardType: TextInputType.number,
-                    decoration: dec(medidas[1], sufixo: 'cm'),
-                    validator: _validaOpcional,
-                  ),
+                  segundo: par[1] == null
+                      ? const SizedBox.shrink()
+                      : TextFormField(
+                          controller: _medidas[par[1]],
+                          keyboardType: TextInputType.number,
+                          decoration: dec(par[1]!, sufixo: 'cm'),
+                          validator: _validaOpcional,
+                        ),
                 ),
                 const SizedBox(height: 12),
               ],
