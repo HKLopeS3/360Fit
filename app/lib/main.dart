@@ -58,3 +58,4 @@ class Fit360App extends StatelessWidget {
     );
   }
 }
+
