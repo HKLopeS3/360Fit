@@ -1,4 +1,7 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -49,12 +52,16 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
   Future<void> _trocarCapa() async {
     final arquivo = await ImagePicker().pickImage(
       source: ImageSource.gallery,
-      maxWidth: 1200,
-      imageQuality: 85,
+      maxWidth: 1600,
+      imageQuality: 90,
     );
     if (arquivo == null) return;
     final bytes = await arquivo.readAsBytes();
-    setState(() => _novaCapa = bytes);
+    if (!mounted) return;
+    // Abre o ajustador de posição/zoom antes de confirmar
+    final ajustado = await _DialogAjusteCapa.mostrar(context, bytes);
+    if (ajustado == null) return;
+    setState(() => _novaCapa = ajustado);
   }
 
   Future<void> _salvar() async {
@@ -254,6 +261,116 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────── Ajuste de capa (pan/zoom)
+
+class _DialogAjusteCapa extends StatefulWidget {
+  const _DialogAjusteCapa({required this.bytes});
+
+  final Uint8List bytes;
+
+  static Future<Uint8List?> mostrar(BuildContext context, Uint8List bytes) =>
+      showDialog<Uint8List>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _DialogAjusteCapa(bytes: bytes),
+      );
+
+  @override
+  State<_DialogAjusteCapa> createState() => _DialogAjusteCapaState();
+}
+
+class _DialogAjusteCapaState extends State<_DialogAjusteCapa> {
+  final _boundaryKey = GlobalKey();
+  bool _capturando = false;
+
+  Future<void> _confirmar() async {
+    setState(() => _capturando = true);
+    final boundary = _boundaryKey.currentContext!.findRenderObject()
+        as RenderRepaintBoundary;
+    final img = await boundary.toImage(pixelRatio: 2.0);
+    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+    if (!mounted) return;
+    Navigator.of(context).pop(byteData?.buffer.asUint8List());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Ajustar capa',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'Arraste e use o pinça para encaixar a foto no banner.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Viewport com proporção de banner (aprox. 16:4)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: RepaintBoundary(
+                key: _boundaryKey,
+                child: SizedBox(
+                  height: 150,
+                  width: double.infinity,
+                  child: InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 8.0,
+                    boundaryMargin: const EdgeInsets.all(double.infinity),
+                    child: Image.memory(widget.bytes, fit: BoxFit.cover),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed:
+                      _capturando ? null : () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: _capturando ? null : _confirmar,
+                  child: _capturando
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Usar esta parte'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

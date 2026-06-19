@@ -22,62 +22,22 @@ class _FinanceiroSection extends ConsumerWidget {
   Future<void> _gerarMes(BuildContext context, WidgetRef ref) async {
     final config = await ref.read(configuracaoEmpresaProvider.future);
     if (!context.mounted) return;
+    final agora = DateTime.now();
     final controllerValor = TextEditingController(
         text: config.mensalidadeValor.toStringAsFixed(2).replaceAll('.', ','));
-    final controllerValidade =
-        TextEditingController(text: '${config.mensalidadeValidadeDias}');
-    final resultado = await showDialog<(double, int)>(
+    DateTime vencimentoEscolhido =
+        agora.add(Duration(days: config.mensalidadeValidadeDias));
+
+    final resultado = await showDialog<(double, DateTime)>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Gerar mensalidade do mês'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controllerValor,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Valor',
-                prefixText: 'R\$ ',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controllerValidade,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Validade',
-                suffixText: 'dias',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final valor = double.tryParse(
-                  controllerValor.text.replaceAll(',', '.'));
-              final validade = int.tryParse(controllerValidade.text);
-              if (valor == null || validade == null) return;
-              Navigator.of(context).pop((valor, validade));
-            },
-            child: const Text('Gerar'),
-          ),
-        ],
+      builder: (ctx) => _DialogGerarMensalidade(
+        controllerValor: controllerValor,
+        vencimentoInicial: vencimentoEscolhido,
       ),
     );
     if (resultado == null) return;
-    final (valor, validadeDias) = resultado;
-    final agora = DateTime.now();
+    final (valor, vencimento) = resultado;
     final competencia = DateTime(agora.year, agora.month, 1);
-    final vencimento = competencia.add(Duration(days: validadeDias - 1));
     await ref
         .read(financeiroRepositoryProvider)
         .gerar(alunoId, competencia, valor, vencimento: vencimento);
@@ -377,6 +337,92 @@ class AlunoDetalheScreen extends ConsumerWidget {
         ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────── Dialog gerar mensalidade
+
+class _DialogGerarMensalidade extends StatefulWidget {
+  const _DialogGerarMensalidade({
+    required this.controllerValor,
+    required this.vencimentoInicial,
+  });
+
+  final TextEditingController controllerValor;
+  final DateTime vencimentoInicial;
+
+  @override
+  State<_DialogGerarMensalidade> createState() =>
+      _DialogGerarMensalidadeState();
+}
+
+class _DialogGerarMensalidadeState extends State<_DialogGerarMensalidade> {
+  late DateTime _vencimento;
+
+  @override
+  void initState() {
+    super.initState();
+    _vencimento = widget.vencimentoInicial;
+  }
+
+  Future<void> _escolherData() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _vencimento,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) setState(() => _vencimento = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final fmtData = DateFormat('dd/MM/yyyy');
+    return AlertDialog(
+      title: const Text('Gerar mensalidade do mês'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: widget.controllerValor,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Valor',
+              prefixText: 'R\$ ',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: _escolherData,
+            child: InputDecorator(
+              decoration: const InputDecoration(
+                labelText: 'Vencimento',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.calendar_today_outlined, size: 18),
+              ),
+              child: Text(fmtData.format(_vencimento)),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        FilledButton(
+          onPressed: () {
+            final valor = double.tryParse(
+                widget.controllerValor.text.replaceAll(',', '.'));
+            if (valor == null) return;
+            Navigator.of(context).pop((valor, _vencimento));
+          },
+          child: const Text('Gerar'),
+        ),
+      ],
     );
   }
 }

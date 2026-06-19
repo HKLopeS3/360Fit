@@ -44,8 +44,17 @@ class AlunoShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final suspensoAsync = ref.watch(alunoSuspensoProvider);
+
     return LayoutBuilder(builder: (context, constraints) {
       final desktop = constraints.maxWidth >= 900;
+
+      // Acesso bloqueado: mensalidade vencida há mais de 2 dias
+      final suspenso = suspensoAsync.valueOrNull ?? false;
+
+      Widget corpo = suspenso
+          ? _TelaSuspensa(desktop: desktop)
+          : shell;
 
       if (desktop) {
         return Scaffold(
@@ -54,30 +63,82 @@ class AlunoShell extends ConsumerWidget {
             children: [
               _SideRailAluno(
                 selectedIndex: shell.currentIndex,
-                onSelect: (i) => _navegar(ref, i),
+                onSelect: suspenso ? (_) {} : (i) => _navegar(ref, i),
               ),
               const VerticalDivider(width: 1),
-              Expanded(child: shell),
+              Expanded(child: corpo),
             ],
           ),
         );
       }
 
       return Scaffold(
-        body: shell,
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: shell.currentIndex,
-          onDestinationSelected: (i) => _navegar(ref, i),
-          destinations: _destinos
-              .map((d) => NavigationDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.iconSel),
-                    label: d.label,
-                  ))
-              .toList(),
-        ),
+        body: corpo,
+        bottomNavigationBar: suspenso
+            ? null
+            : NavigationBar(
+                selectedIndex: shell.currentIndex,
+                onDestinationSelected: (i) => _navegar(ref, i),
+                destinations: _destinos
+                    .map((d) => NavigationDestination(
+                          icon: Icon(d.icon),
+                          selectedIcon: Icon(d.iconSel),
+                          label: d.label,
+                        ))
+                    .toList(),
+              ),
       );
     });
+  }
+}
+
+// ─────────────────────────────────────────────── Tela suspensa
+
+class _TelaSuspensa extends StatelessWidget {
+  const _TelaSuspensa({required this.desktop});
+  final bool desktop;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F7F6),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.lock_outline,
+                    size: 40, color: Color(0xFFEF4444)),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Acesso bloqueado',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1A1A2E)),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Sua mensalidade está em atraso.\n'
+                'Entre em contato com seu personal\n'
+                'para regularizar o acesso.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

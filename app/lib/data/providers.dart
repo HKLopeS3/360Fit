@@ -296,6 +296,16 @@ final mensalidadesProvider = FutureProvider.family<List<Mensalidade>, String>(
   (ref, alunoId) => ref.watch(financeiroRepositoryProvider).doAluno(alunoId),
 );
 
+/// Retorna true quando o aluno logado tem mensalidade vencida há mais de 2 dias.
+final alunoSuspensoProvider = FutureProvider<bool>((ref) async {
+  final lista =
+      await ref.watch(mensalidadesProvider(alunoLogadoId).future);
+  if (lista.isEmpty) return false;
+  final ultima = lista.first;
+  if (ultima.pagoEm != null) return false;
+  return DateTime.now().difference(ultima.vencimento).inDays > 2;
+});
+
 /// Contador de copos de água do dia (aluno logado).
 class AguaNotifier extends AsyncNotifier<int> {
   @override
