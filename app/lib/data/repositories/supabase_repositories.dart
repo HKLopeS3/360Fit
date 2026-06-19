@@ -148,6 +148,7 @@ class SupabaseAuthRepository implements AuthRepository {
       cref: dados['cref'] as String?,
       cpf: dados['cpf'] as String?,
       fotoUrl: dados['foto_url'] as String?,
+      capaUrl: dados['capa_url'] as String?,
       codigoConvite: dados['codigo_convite'] as String?,
     );
   }
@@ -158,6 +159,7 @@ class SupabaseAuthRepository implements AuthRepository {
     String? cref,
     String? cpf,
     List<int>? fotoBytes,
+    List<int>? capaBytes,
   }) async {
     final userId = _db.auth.currentUser!.id;
     final atualizacoes = <String, dynamic>{
@@ -165,13 +167,19 @@ class SupabaseAuthRepository implements AuthRepository {
       if (cref != null) 'cref': cref,
       if (cpf != null) 'cpf': cpf,
     };
-    if (fotoBytes != null) {
+
+    String? empresaId;
+    if (fotoBytes != null || capaBytes != null) {
       final perfil = await _db
           .from('perfis')
           .select('empresa_id')
           .eq('id', userId)
           .single();
-      final caminho = '${perfil['empresa_id']}/$userId.jpg';
+      empresaId = perfil['empresa_id'] as String;
+    }
+
+    if (fotoBytes != null) {
+      final caminho = '$empresaId/$userId.jpg';
       await _db.storage.from('avatares').uploadBinary(
           caminho, Uint8List.fromList(fotoBytes),
           fileOptions: const FileOptions(
@@ -180,6 +188,18 @@ class SupabaseAuthRepository implements AuthRepository {
           .from('avatares')
           .createSignedUrl(caminho, 60 * 60 * 24 * 365);
     }
+
+    if (capaBytes != null) {
+      final caminho = '$empresaId/$userId-capa.jpg';
+      await _db.storage.from('avatares').uploadBinary(
+          caminho, Uint8List.fromList(capaBytes),
+          fileOptions: const FileOptions(
+              contentType: 'image/jpeg', upsert: true));
+      atualizacoes['capa_url'] = await _db.storage
+          .from('avatares')
+          .createSignedUrl(caminho, 60 * 60 * 24 * 365);
+    }
+
     if (atualizacoes.isNotEmpty) {
       await _db.from('perfis').update(atualizacoes).eq('id', userId);
     }
@@ -269,6 +289,31 @@ class SupabaseAlunoRepository implements AlunoRepository {
   @override
   Future<void> atualizar(Aluno aluno) async {
     await _db.from('alunos').update(_paraLinha(aluno)).eq('id', aluno.id);
+  }
+
+  @override
+  Future<InfoPersonal?> personalDoAluno() async {
+    final userId = _db.auth.currentUser?.id;
+    if (userId == null) return null;
+    final linhas = await _db
+        .from('alunos')
+        .select('profissional_id')
+        .eq('perfil_id', userId)
+        .limit(1);
+    if (linhas.isEmpty) return null;
+    final profId = linhas.first['profissional_id'] as String?;
+    if (profId == null) return null;
+    final perfil = await _db
+        .from('perfis')
+        .select('nome, foto_url, capa_url, cref')
+        .eq('id', profId)
+        .single();
+    return InfoPersonal(
+      nome: perfil['nome'] as String,
+      fotoUrl: perfil['foto_url'] as String?,
+      capaUrl: perfil['capa_url'] as String?,
+      cref: perfil['cref'] as String?,
+    );
   }
 }
 

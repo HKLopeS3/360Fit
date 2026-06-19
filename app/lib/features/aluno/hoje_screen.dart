@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
+import '../../data/repositories/repositories.dart';
 import '../../shared/widgets.dart';
 import '../feed/feed_screen.dart';
 import 'execucao_treino_screen.dart';
@@ -112,9 +113,15 @@ class _TreinoDoDia extends ConsumerWidget {
         ?.where((p) => p.vigente)
         .firstOrNull;
 
+    final personalAsync = ref.watch(personalDoAlunoProvider);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        personalAsync.whenData((info) => info != null
+            ? _BannerPersonal(info: info)
+            : const SizedBox.shrink()).valueOrNull ??
+            const SizedBox.shrink(),
         if (programaVigente != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -296,6 +303,85 @@ class _CardAgua extends ConsumerWidget {
               tooltip: 'Bebi um copo!',
               onPressed: () => ref.read(aguaProvider.notifier).ajustar(1),
               icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BannerPersonal extends StatelessWidget {
+  const _BannerPersonal({required this.info});
+
+  final InfoPersonal info;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      height: 130,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF1A2E22),
+        image: info.capaUrl != null
+            ? DecorationImage(
+                image: NetworkImage(info.capaUrl!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(
+                    Colors.black.withValues(alpha: 0.45), BlendMode.darken),
+              )
+            : null,
+        boxShadow: kShadowCard,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            if (info.fotoUrl != null)
+              CircleAvatar(
+                radius: 28,
+                backgroundImage: NetworkImage(info.fotoUrl!),
+              )
+            else
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: Colors.white24,
+                child: Text(
+                  info.nome.isNotEmpty ? info.nome[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700),
+                ),
+              ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    info.nome,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white, fontWeight: FontWeight.w800),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (info.cref != null)
+                    Text(
+                      'CREF ${info.cref}',
+                      style: const TextStyle(
+                          color: Colors.white70, fontSize: 12),
+                    ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Seu personal trainer',
+                    style: TextStyle(color: Colors.white60, fontSize: 12),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

@@ -76,12 +76,14 @@ class MockAuthRepository implements AuthRepository {
     String? cref,
     String? cpf,
     List<int>? fotoBytes,
+    List<int>? capaBytes,
   }) {
     _db.usuarioPersonal = _db.usuarioPersonal.copyWith(
       nome: nome,
       cref: cref,
       cpf: cpf,
       fotoUrl: fotoBytes != null ? 'mock://avatar' : null,
+      capaUrl: capaBytes != null ? 'mock://capa' : null,
     );
     return _simulaRede(_db.usuarioPersonal);
   }
@@ -122,6 +124,14 @@ class MockAlunoRepository implements AlunoRepository {
     if (i >= 0) _db.alunos[i] = aluno;
     return _simulaRede(null);
   }
+
+  @override
+  Future<InfoPersonal?> personalDoAluno() => _simulaRede(InfoPersonal(
+        nome: _db.usuarioPersonal.nome,
+        fotoUrl: _db.usuarioPersonal.fotoUrl,
+        capaUrl: _db.usuarioPersonal.capaUrl,
+        cref: _db.usuarioPersonal.cref,
+      ));
 }
 
 class MockExercicioRepository implements ExercicioRepository {

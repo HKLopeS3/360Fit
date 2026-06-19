@@ -16,6 +16,7 @@ class Usuario {
     this.cref,
     this.cpf,
     this.fotoUrl,
+    this.capaUrl,
     this.codigoConvite,
   });
 
@@ -26,6 +27,8 @@ class Usuario {
   final String? cref;
   final String? cpf;
   final String? fotoUrl;
+  /// URL da imagem de capa/banner exibida no mural do aluno.
+  final String? capaUrl;
   final String? codigoConvite;
 
   String get primeiroNome => nome.split(' ').first;
@@ -35,6 +38,7 @@ class Usuario {
     String? cref,
     String? cpf,
     String? fotoUrl,
+    String? capaUrl,
     String? codigoConvite,
   }) {
     return Usuario(
@@ -45,6 +49,7 @@ class Usuario {
       cref: cref ?? this.cref,
       cpf: cpf ?? this.cpf,
       fotoUrl: fotoUrl ?? this.fotoUrl,
+      capaUrl: capaUrl ?? this.capaUrl,
       codigoConvite: codigoConvite ?? this.codigoConvite,
     );
   }

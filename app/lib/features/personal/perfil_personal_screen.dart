@@ -24,6 +24,7 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
   late final _cpf =
       TextEditingController(text: ref.read(sessaoProvider)?.cpf ?? '');
   Uint8List? _novaFoto;
+  Uint8List? _novaCapa;
   bool _salvando = false;
 
   @override
@@ -45,6 +46,17 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
     setState(() => _novaFoto = bytes);
   }
 
+  Future<void> _trocarCapa() async {
+    final arquivo = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      imageQuality: 85,
+    );
+    if (arquivo == null) return;
+    final bytes = await arquivo.readAsBytes();
+    setState(() => _novaCapa = bytes);
+  }
+
   Future<void> _salvar() async {
     setState(() => _salvando = true);
     await ref.read(sessaoProvider.notifier).atualizarPerfil(
@@ -52,6 +64,7 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
           cref: _cref.text.trim(),
           cpf: _cpf.text.trim(),
           fotoBytes: _novaFoto,
+          capaBytes: _novaCapa,
         );
     if (!mounted) return;
     setState(() => _salvando = false);
@@ -151,6 +164,56 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
+            ),
+            const SectionTitle('Capa do perfil'),
+            GestureDetector(
+              onTap: _trocarCapa,
+              child: Container(
+                height: 130,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1A2E22),
+                  borderRadius: BorderRadius.circular(16),
+                  image: _novaCapa != null
+                      ? DecorationImage(
+                          image: MemoryImage(_novaCapa!),
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                              Colors.black.withValues(alpha: 0.3),
+                              BlendMode.darken),
+                        )
+                      : (usuario?.capaUrl != null
+                          ? DecorationImage(
+                              image: NetworkImage(usuario!.capaUrl!),
+                              fit: BoxFit.cover,
+                              colorFilter: ColorFilter.mode(
+                                  Colors.black.withValues(alpha: 0.3),
+                                  BlendMode.darken),
+                            )
+                          : null),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.add_photo_alternate_outlined,
+                          color: Colors.white70, size: 32),
+                      const SizedBox(height: 6),
+                      Text(
+                        _novaCapa != null || usuario?.capaUrl != null
+                            ? 'Toque para trocar a capa'
+                            : 'Toque para adicionar uma capa',
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'A capa aparece como mural no dashboard dos seus alunos.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
             ),
             const SectionTitle('Código de convite'),
             Card(

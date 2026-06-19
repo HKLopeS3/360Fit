@@ -95,6 +95,7 @@ class SessaoNotifier extends Notifier<Usuario?> {
     ref.invalidate(postagensPendentesProvider);
     ref.invalidate(configuracaoEmpresaProvider);
     ref.invalidate(bibliotecaExerciciosProvider);
+    ref.invalidate(personalDoAlunoProvider);
   }
 
   Future<void> atualizarPerfil({
@@ -102,13 +103,16 @@ class SessaoNotifier extends Notifier<Usuario?> {
     String? cref,
     String? cpf,
     List<int>? fotoBytes,
+    List<int>? capaBytes,
   }) async {
     state = await ref.read(authRepositoryProvider).atualizarPerfil(
           nome: nome,
           cref: cref,
           cpf: cpf,
           fotoBytes: fotoBytes,
+          capaBytes: capaBytes,
         );
+    if (capaBytes != null) ref.invalidate(personalDoAlunoProvider);
   }
 }
 
@@ -121,6 +125,10 @@ final configuracaoEmpresaProvider = FutureProvider<ConfiguracaoEmpresa>(
 
 /// Id do aluno vinculado ao usuário logado como aluno (mock: Carlos = a1).
 const alunoLogadoId = 'a1';
+
+final personalDoAlunoProvider = FutureProvider<InfoPersonal?>(
+  (ref) => ref.watch(alunoRepositoryProvider).personalDoAluno(),
+);
 
 // --------------------------------------------------------------------- dados
 

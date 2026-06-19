@@ -38,7 +38,22 @@ abstract interface class AuthRepository {
     String? cref,
     String? cpf,
     List<int>? fotoBytes,
+    List<int>? capaBytes,
   });
+}
+
+/// Resumo do personal/profissional visto pelo aluno.
+class InfoPersonal {
+  const InfoPersonal({
+    required this.nome,
+    this.fotoUrl,
+    this.capaUrl,
+    this.cref,
+  });
+  final String nome;
+  final String? fotoUrl;
+  final String? capaUrl;
+  final String? cref;
 }
 
 abstract interface class AlunoRepository {
@@ -46,6 +61,9 @@ abstract interface class AlunoRepository {
   Future<Aluno> buscar(String id);
   Future<Aluno> criar(Aluno aluno);
   Future<void> atualizar(Aluno aluno);
+
+  /// Retorna dados do profissional responsável pelo aluno logado.
+  Future<InfoPersonal?> personalDoAluno();
 }
 
 abstract interface class ExercicioRepository {
