@@ -25,6 +25,7 @@ class NovaAvaliacaoScreen extends ConsumerStatefulWidget {
 class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
   final _form = GlobalKey<FormState>();
   final _peso = TextEditingController();
+  final _altura = TextEditingController();
   final _gordura = TextEditingController();
   final _massaMagra = TextEditingController();
   final _medidas = {
@@ -84,6 +85,7 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
   @override
   void dispose() {
     _peso.dispose();
+    _altura.dispose();
     _gordura.dispose();
     _massaMagra.dispose();
     for (final c in _medidas.values) {
@@ -256,11 +258,21 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               const SectionTitle('Composição corporal'),
-              TextFormField(
-                controller: _peso,
-                keyboardType: TextInputType.number,
-                decoration: dec('Peso *', sufixo: 'kg'),
-                validator: _validaObrigatorio,
+              ParDeMetricas(
+                primeiro: TextFormField(
+                  controller: _peso,
+                  keyboardType: TextInputType.number,
+                  decoration: dec('Peso *', sufixo: 'kg'),
+                  validator: _validaObrigatorio,
+                  onChanged: (_) => setState(() {}),
+                ),
+                segundo: TextFormField(
+                  controller: _altura,
+                  keyboardType: TextInputType.number,
+                  decoration: dec('Altura', sufixo: 'cm'),
+                  validator: _validaOpcional,
+                  onChanged: (_) => setState(() {}),
+                ),
               ),
               const SizedBox(height: 12),
               ParDeMetricas(
@@ -269,6 +281,7 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
                   keyboardType: TextInputType.number,
                   decoration: dec('Gordura', sufixo: '%'),
                   validator: _validaOpcional,
+                  onChanged: (_) => setState(() {}),
                 ),
                 segundo: TextFormField(
                   controller: _massaMagra,
@@ -277,6 +290,16 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
                   validator: _validaOpcional,
                 ),
               ),
+              if (aluno != null) ...[
+                const SizedBox(height: 12),
+                _IndicadoresCorporais(
+                  peso: _numero(_peso.text),
+                  alturaCm: _numero(_altura.text),
+                  gorduraPct: _numero(_gordura.text),
+                  sexo: aluno.sexo,
+                  idade: aluno.idade,
+                ),
+              ],
               const SectionTitle('Dobras cutâneas (protocolo)'),
               Wrap(
                 spacing: 8,
@@ -512,6 +535,160 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────── indicadores
+
+class _IndicadoresCorporais extends StatelessWidget {
+  const _IndicadoresCorporais({
+    required this.peso,
+    required this.alturaCm,
+    required this.gorduraPct,
+    required this.sexo,
+    required this.idade,
+  });
+
+  final double? peso;
+  final double? alturaCm;
+  final double? gorduraPct;
+  final String sexo;
+  final int idade;
+
+  // ── IMC ──
+  static ({String faixa, Color cor, String gorduraIdeal}) _classificarImc(double imc) {
+    if (imc < 18.5) return (faixa: 'Abaixo do peso', cor: const Color(0xFF3B82F6), gorduraIdeal: '—');
+    if (imc < 25.0) return (faixa: 'Peso normal', cor: const Color(0xFF22C55E), gorduraIdeal: '—');
+    if (imc < 30.0) return (faixa: 'Sobrepeso', cor: const Color(0xFFF59E0B), gorduraIdeal: '—');
+    if (imc < 35.0) return (faixa: 'Obesidade grau I', cor: const Color(0xFFEF4444), gorduraIdeal: '—');
+    if (imc < 40.0) return (faixa: 'Obesidade grau II', cor: const Color(0xFFDC2626), gorduraIdeal: '—');
+    return (faixa: 'Obesidade grau III', cor: const Color(0xFF991B1B), gorduraIdeal: '—');
+  }
+
+  // ── % Gordura ideal por sexo/idade (referência ACSM) ──
+  static ({double min, double max}) _gorduraIdeal(String sexo, int idade) {
+    if (sexo == 'feminino') {
+      if (idade < 30) return (min: 14, max: 21);
+      if (idade < 40) return (min: 15, max: 23);
+      if (idade < 50) return (min: 16, max: 25);
+      if (idade < 60) return (min: 18, max: 27);
+      return (min: 19, max: 30);
+    } else {
+      if (idade < 30) return (min: 9, max: 16);
+      if (idade < 40) return (min: 11, max: 18);
+      if (idade < 50) return (min: 12, max: 20);
+      if (idade < 60) return (min: 14, max: 22);
+      return (min: 15, max: 24);
+    }
+  }
+
+  static ({String faixa, Color cor}) _classificarGordura(double pct, String sexo, int idade) {
+    final ideal = _gorduraIdeal(sexo, idade);
+    final isMasc = sexo != 'feminino';
+    // limites essencial / atleta / fitness / saudável / alto risco
+    final essen = isMasc ? 5.0 : 12.0;
+    final alto = isMasc ? 25.0 : 32.0;
+    if (pct < essen)        return (faixa: 'Essencial (muito baixo)', cor: const Color(0xFF3B82F6));
+    if (pct < ideal.min)    return (faixa: 'Atleta / abaixo do ideal', cor: const Color(0xFF06B6D4));
+    if (pct <= ideal.max)   return (faixa: 'Ideal ✓', cor: const Color(0xFF22C55E));
+    if (pct < alto)         return (faixa: 'Acima do ideal', cor: const Color(0xFFF59E0B));
+    return (faixa: 'Alto risco', cor: const Color(0xFFEF4444));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final temImc = peso != null && alturaCm != null && alturaCm! > 0;
+    final temGordura = gorduraPct != null;
+    if (!temImc && !temGordura) return const SizedBox.shrink();
+
+    final itens = <Widget>[];
+
+    if (temImc) {
+      final alturaM = alturaCm! / 100;
+      final imc = peso! / (alturaM * alturaM);
+      final cl = _classificarImc(imc);
+      final ideal = _gorduraIdeal(sexo, idade);
+      itens.add(_ChipIndicador(
+        rotulo: 'IMC',
+        valor: imc.toStringAsFixed(1),
+        faixa: cl.faixa,
+        cor: cl.cor,
+        detalhe: 'Gordura ideal (${sexo == 'feminino' ? 'F' : 'M'} ${idade}a): '
+            '${ideal.min.toStringAsFixed(0)}–${ideal.max.toStringAsFixed(0)}%',
+      ));
+    }
+
+    if (temGordura) {
+      final cl = _classificarGordura(gorduraPct!, sexo, idade);
+      final ideal = _gorduraIdeal(sexo, idade);
+      itens.add(_ChipIndicador(
+        rotulo: '% Gordura',
+        valor: '${gorduraPct!.toStringAsFixed(1)}%',
+        faixa: cl.faixa,
+        cor: cl.cor,
+        detalhe: 'Faixa ideal (ACSM): ${ideal.min.toStringAsFixed(0)}–${ideal.max.toStringAsFixed(0)}%',
+      ));
+    }
+
+    return Wrap(spacing: 10, runSpacing: 10, children: itens);
+  }
+}
+
+class _ChipIndicador extends StatelessWidget {
+  const _ChipIndicador({
+    required this.rotulo,
+    required this.valor,
+    required this.faixa,
+    required this.cor,
+    required this.detalhe,
+  });
+
+  final String rotulo;
+  final String valor;
+  final String faixa;
+  final Color cor;
+  final String detalhe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 140),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cor.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: cor, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 6),
+              Text(rotulo,
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(valor,
+              style: TextStyle(
+                  fontSize: 20, fontWeight: FontWeight.w800, color: cor)),
+          Text(faixa,
+              style: TextStyle(
+                  fontSize: 12, fontWeight: FontWeight.w600, color: cor)),
+          const SizedBox(height: 4),
+          Text(detalhe,
+              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        ],
       ),
     );
   }
