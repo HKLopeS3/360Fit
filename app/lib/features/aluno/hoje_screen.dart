@@ -17,6 +17,18 @@ class HojeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessao = ref.watch(sessaoProvider);
     final treinoAsync = ref.watch(treinoDoDiaProvider);
+    final treinosAsync = ref.watch(treinosDoAlunoProvider(alunoLogadoId));
+    final avaliacoesAsync = ref.watch(avaliacoesProvider(alunoLogadoId));
+    final personalAsync = ref.watch(personalDoAlunoProvider);
+    final desktop = MediaQuery.sizeOf(context).width >= 900;
+
+    // Banner do personal — sempre visível, independente do dia/treino
+    final bannerPersonal = personalAsync.when(
+      data: (info) =>
+          info != null ? _BannerPersonal(info: info) : const SizedBox.shrink(),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -49,42 +61,157 @@ class HojeScreen extends ConsumerWidget {
           const LogoutButton(),
         ],
       ),
-      body: PaginaCentralizada(
-        child: AsyncView(
-          value: treinoAsync,
-          builder: (treino) => treino == null
-              ? const _DiaDeDescanso()
-              : _TreinoDoDia(treino: treino),
+      body: desktop
+          ? _BodyDesktop(
+              bannerPersonal: bannerPersonal,
+              dashboardMetricas: _DashboardAluno(avaliacoesAsync: avaliacoesAsync),
+              treinoAsync: treinoAsync,
+              treinosAsync: treinosAsync,
+            )
+          : _BodyMobile(
+              bannerPersonal: bannerPersonal,
+              dashboardMetricas: _DashboardAluno(avaliacoesAsync: avaliacoesAsync),
+              treinoAsync: treinoAsync,
+              treinosAsync: treinosAsync,
+            ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────── Layout Desktop
+
+class _BodyDesktop extends StatelessWidget {
+  const _BodyDesktop({
+    required this.bannerPersonal,
+    required this.dashboardMetricas,
+    required this.treinoAsync,
+    required this.treinosAsync,
+  });
+
+  final Widget bannerPersonal;
+  final Widget dashboardMetricas;
+  final AsyncValue<Treino?> treinoAsync;
+  final AsyncValue<List<Treino>> treinosAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Coluna principal (60%)
+              Expanded(
+                flex: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    bannerPersonal,
+                    const SizedBox(height: 16),
+                    AsyncView(
+                      value: treinoAsync,
+                      builder: (treino) => treino != null
+                          ? _TreinoDoDiaCard(treino: treino)
+                          : _DiaDeDescansoCard(),
+                    ),
+                    const SizedBox(height: 16),
+                    AsyncView(
+                      value: treinoAsync,
+                      builder: (treino) => treino != null
+                          ? Column(children: [
+                              const _CardAgua(),
+                              const SizedBox(height: 16),
+                              _ExerciciosDoDia(treino: treino),
+                            ])
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+              // Coluna lateral (40%)
+              Expanded(
+                flex: 4,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    dashboardMetricas,
+                    const SizedBox(height: 16),
+                    AsyncView(
+                      value: treinoAsync,
+                      builder: (treino) => _ListaTreinosSemana(
+                        treinosAsync: treinosAsync,
+                        treinoHoje: treino,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _DiaDeDescanso extends StatelessWidget {
-  const _DiaDeDescanso();
+// ─────────────────────────────────────────────── Layout Mobile
+
+class _BodyMobile extends StatelessWidget {
+  const _BodyMobile({
+    required this.bannerPersonal,
+    required this.dashboardMetricas,
+    required this.treinoAsync,
+    required this.treinosAsync,
+  });
+
+  final Widget bannerPersonal;
+  final Widget dashboardMetricas;
+  final AsyncValue<Treino?> treinoAsync;
+  final AsyncValue<List<Treino>> treinosAsync;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.self_improvement, size: 72, color: context.brand.primaria),
-          const SizedBox(height: 12),
-          Text('Hoje é dia de descanso!',
-              style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 4),
-          const Text('Aproveite para se recuperar e hidratar.'),
-        ],
-      ),
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        // Banner sempre no topo — independente do dia de treino
+        bannerPersonal,
+        dashboardMetricas,
+        AsyncView(
+          value: treinoAsync,
+          builder: (treino) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (treino != null) ...[
+                _TreinoDoDiaCard(treino: treino),
+                const SizedBox(height: 12),
+                const _CardAgua(),
+                const SizedBox(height: 4),
+                _ExerciciosDoDia(treino: treino),
+              ] else ...[
+                _DiaDeDescansoCard(),
+                const SizedBox(height: 12),
+              ],
+              _ListaTreinosSemana(
+                treinosAsync: treinosAsync,
+                treinoHoje: treino,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
-class _TreinoDoDia extends ConsumerWidget {
-  const _TreinoDoDia({required this.treino});
+// ─────────────────────────────────────────────── Card treino do dia
 
+class _TreinoDoDiaCard extends ConsumerWidget {
+  const _TreinoDoDiaCard({required this.treino});
   final Treino treino;
 
   @override
@@ -95,11 +222,8 @@ class _TreinoDoDia extends ConsumerWidget {
     final concluidos = execucao[treino.id] ?? const <int>{};
     final progresso =
         treino.itens.isEmpty ? 0.0 : concluidos.length / treino.itens.length;
-    final exercicios = ref.read(exercicioRepositoryProvider);
-    final historicoAsync =
-        ref.watch(historicoConcluidosProvider(alunoLogadoId));
-    final treinosAsync = ref.watch(treinosDoAlunoProvider(alunoLogadoId));
 
+    final historicoAsync = ref.watch(historicoConcluidosProvider(alunoLogadoId));
     final hoje = DateTime.now();
     final concluidoHoje = historicoAsync.valueOrNull?.any((c) =>
             c.data.year == hoje.year &&
@@ -113,18 +237,9 @@ class _TreinoDoDia extends ConsumerWidget {
         ?.where((p) => p.vigente)
         .firstOrNull;
 
-    final personalAsync = ref.watch(personalDoAlunoProvider);
-    final avaliacoesAsync = ref.watch(avaliacoesProvider(alunoLogadoId));
-
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        personalAsync.whenData((info) => info != null
-            ? _BannerPersonal(info: info)
-            : const SizedBox.shrink()).valueOrNull ??
-            const SizedBox.shrink(),
-        // ── Métricas rápidas do aluno ──
-        _DashboardAluno(avaliacoesAsync: avaliacoesAsync),
         if (programaVigente != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -147,7 +262,6 @@ class _TreinoDoDia extends ConsumerWidget {
               ],
             ),
           ),
-        // Cartão-resumo do treino
         Card(
           child: Container(
             decoration: BoxDecoration(
@@ -191,9 +305,7 @@ class _TreinoDoDia extends ConsumerWidget {
                 else
                   FilledButton.icon(
                     onPressed: () {
-                      ref
-                          .read(execucaoSessaoProvider.notifier)
-                          .iniciar(treino);
+                      ref.read(execucaoSessaoProvider.notifier).iniciar(treino);
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const ExecucaoTreinoScreen(),
@@ -231,33 +343,251 @@ class _TreinoDoDia extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 12),
-        const _CardAgua(),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────── Exercícios do dia
+
+class _ExerciciosDoDia extends ConsumerWidget {
+  const _ExerciciosDoDia({required this.treino});
+  final Treino treino;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final execucao = ref.watch(execucaoTreinoProvider);
+    final concluidos = execucao[treino.id] ?? const <int>{};
+    final exercicios = ref.read(exercicioRepositoryProvider);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         const SectionTitle('Exercícios de hoje'),
         for (final (i, item) in treino.itens.indexed)
           _ExercicioTile(
             item: item,
             exercicio: exercicios.porId(item.exercicioId),
             concluido: concluidos.contains(i),
-            aoMarcar: () => ref
-                .read(execucaoTreinoProvider.notifier)
-                .alternar(treino.id, i),
+            aoMarcar: () =>
+                ref.read(execucaoTreinoProvider.notifier).alternar(treino.id, i),
           ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────── Dia de descanso
+
+class _DiaDeDescansoCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: kShadowCard,
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.self_improvement, size: 44, color: brand.primaria),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Hoje é dia de descanso!',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Aproveite para se recuperar e hidratar.',
+                  style: TextStyle(color: kTextSecondary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────── Lista de treinos da semana
+
+class _ListaTreinosSemana extends StatelessWidget {
+  const _ListaTreinosSemana({
+    required this.treinosAsync,
+    required this.treinoHoje,
+  });
+
+  final AsyncValue<List<Treino>> treinosAsync;
+  final Treino? treinoHoje;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         const SectionTitle('Meus treinos'),
         AsyncView(
           value: treinosAsync,
-          builder: (treinos) => Column(
-            children: [
-              for (final t in treinos) TreinoResumoCard(treino: t),
-            ],
-          ),
+          builder: (treinos) {
+            if (treinos.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: kShadowCard,
+                ),
+                child: const Center(
+                  child: Text(
+                    'Nenhum treino prescrito ainda.',
+                    style: TextStyle(color: kTextSecondary),
+                  ),
+                ),
+              );
+            }
+            return Column(
+              children: [
+                for (final t in treinos)
+                  _TreinoSemanaCard(
+                    treino: t,
+                    ehHoje: treinoHoje?.id == t.id,
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
   }
 }
 
-/// Contador diário de hidratação (meta: 8 copos).
+class _TreinoSemanaCard extends StatelessWidget {
+  const _TreinoSemanaCard({required this.treino, required this.ehHoje});
+
+  final Treino treino;
+  final bool ehHoje;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = context.brand;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: ehHoje ? brand.primaria.withValues(alpha: 0.08) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: ehHoje
+              ? brand.primaria.withValues(alpha: 0.4)
+              : Colors.transparent,
+        ),
+        boxShadow: kShadowCard,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: ehHoje
+                  ? brand.primaria
+                  : brand.primaria.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              Icons.fitness_center,
+              size: 20,
+              color: ehHoje ? Colors.white : brand.primaria,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        treino.nome,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: ehHoje ? brand.primaria : kTextPrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (ehHoje)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: brand.primaria,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Text(
+                          'Hoje',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${treino.foco} · ${treino.itens.length} exercícios',
+                  style: const TextStyle(fontSize: 12, color: kTextSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (treino.diasSemana.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _diasStr(treino.diasSemana),
+                      style: const TextStyle(
+                          fontSize: 11, color: kTextSecondary),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _diasStr(List<int> dias) {
+    const nomes = {
+      1: 'Seg',
+      2: 'Ter',
+      3: 'Qua',
+      4: 'Qui',
+      5: 'Sex',
+      6: 'Sáb',
+      7: 'Dom',
+    };
+    final sorted = [...dias]..sort();
+    return sorted.map((d) => nomes[d] ?? '').join(' · ');
+  }
+}
+
+// ─────────────────────────────────────────────── Água
+
 class _CardAgua extends ConsumerWidget {
   const _CardAgua();
 
@@ -279,8 +609,7 @@ class _CardAgua extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Hidratação: $copos de $meta copos',
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w700)),
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),
@@ -314,7 +643,7 @@ class _CardAgua extends ConsumerWidget {
   }
 }
 
-// ── Dashboard rápido do aluno ──────────────────────────────────────────────
+// ─────────────────────────────────────────────── Dashboard rápido
 
 class _DashboardAluno extends StatelessWidget {
   const _DashboardAluno({required this.avaliacoesAsync});
@@ -348,14 +677,15 @@ class _DashboardAluno extends StatelessWidget {
             cor: brand.primaria,
           ),
           const SizedBox(width: 8),
-          if (ultima.gorduraPct > 0)
+          if (ultima.gorduraPct > 0) ...[
             _MiniMetrica(
               icone: Icons.water_drop_outlined,
               valor: '${ultima.gorduraPct.toStringAsFixed(1)}%',
               rotulo: 'Gordura',
               cor: corGordura(ultima.gorduraPct),
             ),
-          if (ultima.gorduraPct > 0) const SizedBox(width: 8),
+            const SizedBox(width: 8),
+          ],
           _MiniMetrica(
             icone: Icons.fitness_center_outlined,
             valor: '${ultima.massaMagraKg.toStringAsFixed(1)} kg',
@@ -413,6 +743,8 @@ class _MiniMetrica extends StatelessWidget {
     );
   }
 }
+
+// ─────────────────────────────────────────────── Banner Personal
 
 class _BannerPersonal extends StatelessWidget {
   const _BannerPersonal({required this.info});
@@ -493,6 +825,8 @@ class _BannerPersonal extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────── Exercício tile
+
 class _ExercicioTile extends StatelessWidget {
   const _ExercicioTile({
     required this.item,
@@ -510,7 +844,9 @@ class _ExercicioTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final brand = context.brand;
-    final carga = item.cargaKg > 0 ? ' · ${item.cargaKg.toStringAsFixed(item.cargaKg % 1 == 0 ? 0 : 1)} kg' : '';
+    final carga = item.cargaKg > 0
+        ? ' · ${item.cargaKg.toStringAsFixed(item.cargaKg % 1 == 0 ? 0 : 1)} kg'
+        : '';
     return Card(
       color: Colors.white,
       margin: const EdgeInsets.only(bottom: 10),
@@ -530,7 +866,6 @@ class _ExercicioTile extends StatelessWidget {
         subtitle: Text(
           '${item.series}x ${item.repeticoes}$carga · descanso ${item.descansoSeg}s',
         ),
-        // Em telas estreitas o chip rouba espaço do nome do exercício.
         secondary: MediaQuery.sizeOf(context).width < 420
             ? null
             : Chip(

@@ -19,59 +19,103 @@ class DashboardScreen extends ConsumerWidget {
     final sessao = ref.watch(sessaoProvider);
     final alunosAsync = ref.watch(alunosProvider);
 
+    final desktop = MediaQuery.sizeOf(context).width >= 900;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F7F6),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.black12,
-        surfaceTintColor: Colors.transparent,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            _Avatar(nome: sessao?.nome ?? ''),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
+      appBar: desktop
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              shadowColor: Colors.black12,
+              surfaceTintColor: Colors.transparent,
+              titleSpacing: 24,
+              title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    sessao?.primeiroNome ?? 'Personal',
+                    'Olá, ${sessao?.primeiroNome ?? 'Personal'} 👋',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: Color(0xFF1A1A2E),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
-                    'Profissional de Ed. Física',
+                    'Aqui está o resumo do seu dia',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: Colors.grey.shade500,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
                 ],
               ),
+              actions: [
+                _NotificacoesBadge(),
+                IconButton(
+                  tooltip: 'Feed da academia',
+                  icon: const Icon(Icons.dynamic_feed_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const FeedScreen(comoPersonal: true)),
+                  ),
+                ),
+                const LogoutButton(),
+                const SizedBox(width: 16),
+              ],
+            )
+          : AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              shadowColor: Colors.black12,
+              surfaceTintColor: Colors.transparent,
+              titleSpacing: 16,
+              title: Row(
+                children: [
+                  _Avatar(nome: sessao?.nome ?? ''),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          sessao?.primeiroNome ?? 'Personal',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF1A1A2E),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          'Profissional de Ed. Física',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                _NotificacoesBadge(),
+                IconButton(
+                  tooltip: 'Feed da academia',
+                  icon: const Icon(Icons.dynamic_feed_outlined),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                        builder: (_) => const FeedScreen(comoPersonal: true)),
+                  ),
+                ),
+                const LogoutButton(),
+                const SizedBox(width: 4),
+              ],
             ),
-          ],
-        ),
-        actions: [
-          _NotificacoesBadge(),
-          IconButton(
-            tooltip: 'Feed da academia',
-            icon: const Icon(Icons.dynamic_feed_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const FeedScreen(comoPersonal: true)),
-            ),
-          ),
-          const LogoutButton(),
-          const SizedBox(width: 4),
-        ],
-      ),
       body: AsyncView(
         value: alunosAsync,
         builder: (alunos) {
