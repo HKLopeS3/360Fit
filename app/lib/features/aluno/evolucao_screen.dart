@@ -22,35 +22,33 @@ class EvolucaoScreen extends ConsumerWidget {
     final cargasSupino = ref.watch(
         cargasProvider((alunoId: alunoLogadoId, exercicioId: 'e1')));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minha evolução'),
-        actions: [
-          IconButton(
-            tooltip: 'Fotos de evolução',
-            icon: const Icon(Icons.photo_library_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (_) => const FotosEvolucaoScreen()),
-            ),
+    return TelaResponsiva(
+      titulo: 'Minha evolução',
+      actions: [
+        IconButton(
+          tooltip: 'Fotos de evolução',
+          icon: const Icon(Icons.photo_library_outlined),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (_) => const FotosEvolucaoScreen()),
           ),
-          IconButton(
-            tooltip: 'Minhas conquistas',
-            icon: const Icon(Icons.emoji_events_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ConquistasScreen()),
-            ),
+        ),
+        IconButton(
+          tooltip: 'Minhas conquistas',
+          icon: const Icon(Icons.emoji_events_outlined),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ConquistasScreen()),
           ),
-          IconButton(
-            tooltip: 'Histórico de treinos',
-            icon: const Icon(Icons.history),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const HistoricoScreen()),
-            ),
+        ),
+        IconButton(
+          tooltip: 'Histórico de treinos',
+          icon: const Icon(Icons.history),
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HistoricoScreen()),
           ),
-          const LogoutButton(),
-        ],
-      ),
+        ),
+        const LogoutButton(),
+      ],
       body: PaginaCentralizada(
         child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),

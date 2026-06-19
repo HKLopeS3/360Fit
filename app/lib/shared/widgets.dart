@@ -387,3 +387,75 @@ final fmtHora = DateFormat('HH:mm');
 
 String capitalizar(String s) =>
     s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
+
+/// Substituto responsivo para Scaffold + AppBar.
+/// - Desktop (≥900px): sem AppBar; mostra barra superior branca com título e ações
+/// - Mobile (<900px): Scaffold normal com AppBar
+class TelaResponsiva extends StatelessWidget {
+  const TelaResponsiva({
+    super.key,
+    required this.titulo,
+    required this.body,
+    this.actions = const [],
+    this.toolbarHeight = kToolbarHeight,
+    this.backgroundColor,
+    this.floatingActionButton,
+  });
+
+  final String titulo;
+  final Widget body;
+  final List<Widget> actions;
+  final double toolbarHeight;
+  final Color? backgroundColor;
+  final Widget? floatingActionButton;
+
+  @override
+  Widget build(BuildContext context) {
+    final desktop = MediaQuery.sizeOf(context).width >= 900;
+    final bgColor = backgroundColor ?? const Color(0xFFF4F7F6);
+
+    if (desktop) {
+      return Scaffold(
+        backgroundColor: bgColor,
+        floatingActionButton: floatingActionButton,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              height: 64,
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Row(
+                children: [
+                  Text(
+                    titulo,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A2E),
+                    ),
+                  ),
+                  const Spacer(),
+                  ...actions,
+                ],
+              ),
+            ),
+            Container(height: 1, color: const Color(0xFFE8EAF0)),
+            Expanded(child: body),
+          ],
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      floatingActionButton: floatingActionButton,
+      appBar: AppBar(
+        title: Text(titulo),
+        toolbarHeight: toolbarHeight,
+        actions: actions,
+      ),
+      body: body,
+    );
+  }
+}

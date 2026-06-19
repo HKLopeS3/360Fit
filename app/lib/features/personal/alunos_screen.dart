@@ -21,11 +21,9 @@ class _AlunosScreenState extends ConsumerState<AlunosScreen> {
   Widget build(BuildContext context) {
     final alunosAsync = ref.watch(alunosProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meus alunos'),
-        actions: const [LogoutButton()],
-      ),
+    return TelaResponsiva(
+      titulo: 'Meus alunos',
+      actions: const [LogoutButton()],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const FormAlunoScreen()),

@@ -19,11 +19,9 @@ class ChatScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final conversaAsync = ref.watch(conversaProvider(alunoId));
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(comoAluno ? 'Chat com o personal' : 'Chat com o aluno'),
-        actions: comoAluno ? const [LogoutButton()] : null,
-      ),
+    return TelaResponsiva(
+      titulo: comoAluno ? 'Chat com o personal' : 'Chat com o aluno',
+      actions: comoAluno ? const [LogoutButton()] : const [],
       body: PaginaCentralizada(
         child: Column(
           children: [

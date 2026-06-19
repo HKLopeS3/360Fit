@@ -70,11 +70,9 @@ class AgendaPersonalScreen extends ConsumerWidget {
     final agendaAsync = ref.watch(agendaProvider(null));
     final alunosAsync = ref.watch(alunosProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Agenda da semana'),
-        actions: const [LogoutButton()],
-      ),
+    return TelaResponsiva(
+      titulo: 'Agenda da semana',
+      actions: const [LogoutButton()],
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const NovoAgendamentoScreen()),

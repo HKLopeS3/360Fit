@@ -71,8 +71,6 @@ class SinoNotificacoes extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notificacoes = ref.watch(notificacoesProvider).valueOrNull ?? [];
-    final lidas = ref.watch(notificacoesLidasProvider);
-    final naoLidas = notificacoes.where((n) => !lidas.contains(n.id)).length;
 
     return IconButton(
       tooltip: 'Notificações',
@@ -86,11 +84,7 @@ class SinoNotificacoes extends ConsumerWidget {
           builder: (_) => _ListaNotificacoes(notificacoes: notificacoes),
         );
       },
-      icon: Badge(
-        isLabelVisible: naoLidas > 0,
-        label: Text('$naoLidas'),
-        child: const Icon(Icons.notifications_outlined),
-      ),
+      icon: const Icon(Icons.notifications_outlined),
     );
   }
 }

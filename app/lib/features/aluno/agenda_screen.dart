@@ -22,11 +22,9 @@ class AgendaAlunoScreen extends ConsumerWidget {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Minha agenda'),
-        actions: const [LogoutButton()],
-      ),
+    return TelaResponsiva(
+      titulo: 'Minha agenda',
+      actions: const [LogoutButton()],
       body: PaginaCentralizada(
         child: AsyncView(
           value: agendaAsync,

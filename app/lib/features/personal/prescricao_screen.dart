@@ -142,11 +142,9 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
   Widget build(BuildContext context) {
     final alunosAsync = ref.watch(alunosProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Prescrição de treino'),
-        actions: const [LogoutButton()],
-      ),
+    return TelaResponsiva(
+      titulo: 'Prescrição de treino',
+      actions: const [LogoutButton()],
       floatingActionButton: _treino == null
           ? null
           : FloatingActionButton.extended(

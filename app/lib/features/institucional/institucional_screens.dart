@@ -49,8 +49,8 @@ class MaisScreen extends ConsumerWidget {
     void abrir(Widget tela) => Navigator.of(context)
         .push(MaterialPageRoute(builder: (_) => tela));
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mais')),
+    return TelaResponsiva(
+      titulo: 'Mais',
       body: PaginaCentralizada(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
