@@ -10,6 +10,7 @@ import 'core/config/app_config.dart';
 import 'core/models/models.dart';
 import 'data/providers.dart';
 import 'data/repositories/supabase_repositories.dart';
+import 'features/auth/boas_vindas_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,11 +30,15 @@ Future<void> main() async {
     }
   }
   if (sessaoRestaurada != null) {
-    router = criarRouter(
-      initialLocation: sessaoRestaurada.perfil == PerfilUsuario.aluno
+    final String destino;
+    if (BoasVindasScreen.deveExibir(sessaoRestaurada.id)) {
+      destino = '/boas-vindas';
+    } else {
+      destino = sessaoRestaurada.perfil == PerfilUsuario.aluno
           ? '/aluno/hoje'
-          : '/personal/dashboard',
-    );
+          : '/personal/dashboard';
+    }
+    router = criarRouter(initialLocation: destino);
   }
 
   runApp(ProviderScope(
