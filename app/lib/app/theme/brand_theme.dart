@@ -19,6 +19,8 @@ class BrandTheme extends ThemeExtension<BrandTheme> {
   final Color alerta;
   final List<Color> gradientePrimario;
 
+  Color get primaria => gradientePrimario.first;
+
   static const fit360 = BrandTheme(
     nomeMarca: '360Fit',
     sucesso: Color(0xFF2E7D32),
