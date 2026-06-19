@@ -8,6 +8,8 @@ import '../../app/theme/brand_theme.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
 import '../feed/feed_screen.dart';
+import 'form_aluno_screen.dart';
+import 'perfil_personal_screen.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -80,6 +82,18 @@ class DashboardScreen extends ConsumerWidget {
               _PrimeirosPassos(
                 temAlunos: alunos.isNotEmpty,
                 temCref: sessao?.cref != null && (sessao!.cref!.isNotEmpty),
+                onPerfil: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const PerfilPersonalScreen()),
+                ),
+                onNovoAluno: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const FormAlunoScreen()),
+                ),
+                onPrescricao: () => context.go('/personal/prescricao'),
+                onFeed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => const FeedScreen(comoPersonal: true)),
+                ),
               ),
               const SizedBox(height: 4),
 
@@ -153,9 +167,20 @@ class _Avatar extends StatelessWidget {
 // ─────────────────────────────────────────────── Primeiros Passos
 
 class _PrimeirosPassos extends StatelessWidget {
-  const _PrimeirosPassos({required this.temAlunos, required this.temCref});
+  const _PrimeirosPassos({
+    required this.temAlunos,
+    required this.temCref,
+    required this.onPerfil,
+    required this.onNovoAluno,
+    required this.onPrescricao,
+    required this.onFeed,
+  });
   final bool temAlunos;
   final bool temCref;
+  final VoidCallback onPerfil;
+  final VoidCallback onNovoAluno;
+  final VoidCallback onPrescricao;
+  final VoidCallback onFeed;
 
   @override
   Widget build(BuildContext context) {
@@ -165,24 +190,28 @@ class _PrimeirosPassos extends StatelessWidget {
         icone: Icons.person_outlined,
         cor: const Color(0xFF00897B),
         concluido: temCref,
+        aoTocar: onPerfil,
       ),
       _Passo(
         titulo: 'Cadastre um Aluno',
         icone: Icons.group_add_outlined,
         cor: const Color(0xFF00ACC1),
         concluido: temAlunos,
+        aoTocar: onNovoAluno,
       ),
       _Passo(
         titulo: 'Prescreva um treino',
         icone: Icons.assignment_outlined,
         cor: const Color(0xFF43A047),
         concluido: false,
+        aoTocar: onPrescricao,
       ),
       _Passo(
         titulo: 'Publique no feed',
         icone: Icons.campaign_outlined,
         cor: const Color(0xFF7CB342),
         concluido: false,
+        aoTocar: onFeed,
       ),
     ];
     final concluidos = passos.where((p) => p.concluido).length;
@@ -247,11 +276,13 @@ class _Passo {
     required this.icone,
     required this.cor,
     required this.concluido,
+    this.aoTocar,
   });
   final String titulo;
   final IconData icone;
   final Color cor;
   final bool concluido;
+  final VoidCallback? aoTocar;
 }
 
 class _CardPasso extends StatelessWidget {
@@ -260,7 +291,7 @@ class _CardPasso extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       width: 148,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -352,6 +383,11 @@ class _CardPasso extends StatelessWidget {
           ),
         ],
       ),
+    );
+    if (passo.aoTocar == null || passo.concluido) return card;
+    return GestureDetector(
+      onTap: passo.aoTocar,
+      child: card,
     );
   }
 }

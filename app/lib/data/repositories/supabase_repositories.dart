@@ -303,11 +303,22 @@ class SupabaseAlunoRepository implements AlunoRepository {
     if (linhas.isEmpty) return null;
     final profId = linhas.first['profissional_id'] as String?;
     if (profId == null) return null;
-    final perfil = await _db
-        .from('perfis')
-        .select('nome, foto_url, capa_url, cref')
-        .eq('id', profId)
-        .single();
+    // Tenta incluir capa_url; se a coluna ainda não existir (migration pendente),
+    // faz fallback sem ela para não quebrar o banner.
+    Map<String, dynamic> perfil;
+    try {
+      perfil = await _db
+          .from('perfis')
+          .select('nome, foto_url, capa_url, cref')
+          .eq('id', profId)
+          .single();
+    } catch (_) {
+      perfil = await _db
+          .from('perfis')
+          .select('nome, foto_url, cref')
+          .eq('id', profId)
+          .single();
+    }
     return InfoPersonal(
       nome: perfil['nome'] as String,
       fotoUrl: perfil['foto_url'] as String?,
