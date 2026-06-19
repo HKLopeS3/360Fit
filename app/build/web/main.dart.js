@@ -10309,7 +10309,7 @@ return A.k(A.dM(null,t.H),$async$UT)
 case 2:$.b6_="pt_BR"
 f.a=null
 s=3
-return A.k(A.aKz("sb_publishable_0jq-BTTWm7buWedk3eJPnA_3BKxyPlC","https://rvplwftnzsfjcpwgqsig.supabase.co"),$async$UT)
+return A.k(A.aKz("x","x"),$async$UT)
 case 3:q=5
 d=f
 s=8

@@ -6,6 +6,7 @@
 ///             --dart-define=SUPABASE_ANON_KEY=eyJ...
 /// ```
 /// Sem elas o app roda 100% nos repositórios mock (modo demo/desenvolvimento).
+// ignore: avoid_classes_with_only_static_members
 abstract final class AppConfig {
   static const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
   static const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
