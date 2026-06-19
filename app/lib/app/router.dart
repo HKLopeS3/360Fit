@@ -9,6 +9,7 @@ import '../features/aluno/aluno_shell.dart';
 import '../features/aluno/chat_screen.dart';
 import '../features/aluno/evolucao_screen.dart';
 import '../features/aluno/hoje_screen.dart';
+import '../features/auth/boas_vindas_screen.dart';
 import '../features/auth/cadastro_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/institucional/institucional_screens.dart';
@@ -41,6 +42,10 @@ GoRouter criarRouter({String initialLocation = '/login'}) => GoRouter(
     GoRoute(
       path: '/cadastro',
       builder: (context, state) => const CadastroScreen(),
+    ),
+    GoRoute(
+      path: '/boas-vindas',
+      builder: (context, state) => const BoasVindasScreen(),
     ),
     // ------------------------------------------------------------- aluno
     StatefulShellRoute.indexedStack(

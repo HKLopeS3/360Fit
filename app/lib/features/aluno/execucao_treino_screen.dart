@@ -6,6 +6,7 @@ import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
+import 'resultado_treino_screen.dart';
 
 /// Execução guiada do treino: série a série, com cronômetro de descanso.
 class ExecucaoTreinoScreen extends ConsumerStatefulWidget {
@@ -144,12 +145,11 @@ class _ExecucaoTreinoScreenState extends ConsumerState<ExecucaoTreinoScreen> {
               dorRelato: feedback.relato,
             );
     if (!mounted || conclusao == null) return;
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => _ResumoDialog(conclusao: conclusao),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ResultadoTreinoScreen(conclusao: conclusao),
+      ),
     );
-    if (mounted) Navigator.of(context).pop();
   }
 
   @override

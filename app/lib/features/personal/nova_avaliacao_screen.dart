@@ -28,17 +28,27 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
   final _gordura = TextEditingController();
   final _massaMagra = TextEditingController();
   final _medidas = {
+    // ── Tronco (simétricas) ──
+    'Pescoço': TextEditingController(),
     'Ombros': TextEditingController(),
     'Peitoral': TextEditingController(),
-    'Braço relaxado': TextEditingController(),
-    'Braço contraído': TextEditingController(),
-    'Antebraço': TextEditingController(),
     'Cintura': TextEditingController(),
     'Abdômen': TextEditingController(),
     'Quadril': TextEditingController(),
-    'Coxa proximal': TextEditingController(),
-    'Coxa medial': TextEditingController(),
-    'Panturrilha': TextEditingController(),
+    // ── Membros superiores (bilaterais) ──
+    'Braço D relaxado': TextEditingController(),
+    'Braço E relaxado': TextEditingController(),
+    'Braço D contraído': TextEditingController(),
+    'Braço E contraído': TextEditingController(),
+    'Antebraço D': TextEditingController(),
+    'Antebraço E': TextEditingController(),
+    // ── Membros inferiores (bilaterais) ──
+    'Coxa D proximal': TextEditingController(),
+    'Coxa E proximal': TextEditingController(),
+    'Coxa D medial': TextEditingController(),
+    'Coxa E medial': TextEditingController(),
+    'Panturrilha D': TextEditingController(),
+    'Panturrilha E': TextEditingController(),
   };
   final _observacoes = TextEditingController();
   bool _salvando = false;
@@ -406,13 +416,11 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
                   }),
                 ),
               const SectionTitle('Medidas (cm)'),
+              // Tronco — campos simétricos
               for (final par in [
-                ['Ombros', 'Peitoral'],
-                ['Braço relaxado', 'Braço contraído'],
-                ['Antebraço', 'Cintura'],
+                ['Pescoço', 'Ombros'],
+                ['Peitoral', 'Cintura'],
                 ['Abdômen', 'Quadril'],
-                ['Coxa proximal', 'Coxa medial'],
-                ['Panturrilha', null],
               ]) ...[
                 ParDeMetricas(
                   primeiro: TextFormField(
@@ -421,14 +429,64 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
                     decoration: dec(par[0]!, sufixo: 'cm'),
                     validator: _validaOpcional,
                   ),
-                  segundo: par[1] == null
-                      ? const SizedBox.shrink()
-                      : TextFormField(
-                          controller: _medidas[par[1]],
-                          keyboardType: TextInputType.number,
-                          decoration: dec(par[1]!, sufixo: 'cm'),
-                          validator: _validaOpcional,
-                        ),
+                  segundo: TextFormField(
+                    controller: _medidas[par[1]],
+                    keyboardType: TextInputType.number,
+                    decoration: dec(par[1]!, sufixo: 'cm'),
+                    validator: _validaOpcional,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              // Braços — bilaterais
+              const Padding(
+                padding: EdgeInsets.only(top: 4, bottom: 8),
+                child: Text('Braços', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              ),
+              for (final par in [
+                ['Braço D relaxado', 'Braço E relaxado'],
+                ['Braço D contraído', 'Braço E contraído'],
+                ['Antebraço D', 'Antebraço E'],
+              ]) ...[
+                ParDeMetricas(
+                  primeiro: TextFormField(
+                    controller: _medidas[par[0]],
+                    keyboardType: TextInputType.number,
+                    decoration: dec(par[0]!, sufixo: 'cm'),
+                    validator: _validaOpcional,
+                  ),
+                  segundo: TextFormField(
+                    controller: _medidas[par[1]],
+                    keyboardType: TextInputType.number,
+                    decoration: dec(par[1]!, sufixo: 'cm'),
+                    validator: _validaOpcional,
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+              // Pernas — bilaterais
+              const Padding(
+                padding: EdgeInsets.only(top: 4, bottom: 8),
+                child: Text('Pernas', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+              ),
+              for (final par in [
+                ['Coxa D proximal', 'Coxa E proximal'],
+                ['Coxa D medial', 'Coxa E medial'],
+                ['Panturrilha D', 'Panturrilha E'],
+              ]) ...[
+                ParDeMetricas(
+                  primeiro: TextFormField(
+                    controller: _medidas[par[0]],
+                    keyboardType: TextInputType.number,
+                    decoration: dec(par[0]!, sufixo: 'cm'),
+                    validator: _validaOpcional,
+                  ),
+                  segundo: TextFormField(
+                    controller: _medidas[par[1]],
+                    keyboardType: TextInputType.number,
+                    decoration: dec(par[1]!, sufixo: 'cm'),
+                    validator: _validaOpcional,
+                  ),
                 ),
                 const SizedBox(height: 12),
               ],

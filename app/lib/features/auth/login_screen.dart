@@ -7,6 +7,7 @@ import '../../app/theme/brand_theme.dart';
 import '../../core/config/contato.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
+import 'boas_vindas_screen.dart';
 import '../institucional/institucional_screens.dart';
 import '../institucional/politicas_conteudo.dart';
 
@@ -134,9 +135,14 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
           .read(sessaoProvider.notifier)
           .entrarComEmailSenha(_email.text, _senha.text);
       if (!mounted) return;
-      context.go(usuario.perfil == PerfilUsuario.aluno
+      final destino = usuario.perfil == PerfilUsuario.aluno
           ? '/aluno/hoje'
-          : '/personal/dashboard');
+          : '/personal/dashboard';
+      if (BoasVindasScreen.deveExibir(usuario.id)) {
+        context.go('/boas-vindas');
+      } else {
+        context.go(destino);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _entrando = false);
