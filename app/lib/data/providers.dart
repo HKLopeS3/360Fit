@@ -70,6 +70,8 @@ class SessaoNotifier extends Notifier<Usuario?> {
 
   /// Invalida todos os providers de dados para evitar flash de dados
   /// de uma sessão anterior quando um novo usuário faz login.
+  void limparCache() => _limparCache();
+
   void _limparCache() {
     ref.invalidate(alunosProvider);
     ref.invalidate(alunoProvider);

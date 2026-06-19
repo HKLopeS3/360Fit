@@ -110,6 +110,9 @@ class SupabaseAuthRepository implements AuthRepository {
       _db.auth.resetPasswordForEmail(email.trim());
 
   @override
+  Future<void> excluirConta() => _db.rpc('excluir_minha_conta');
+
+  @override
   Future<bool> validarCodigoConvite(String codigo) async {
     final resposta = await _db
         .rpc('validar_codigo_convite', params: {'codigo': codigo});

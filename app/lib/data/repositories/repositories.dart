@@ -16,6 +16,9 @@ abstract interface class AuthRepository {
 
   Future<void> recuperarSenha(String email);
 
+  /// Exclui permanentemente a conta do usuário logado e todos os seus dados.
+  Future<void> excluirConta();
+
   /// Cria uma conta nova. Sem [codigoConvite], a conta vira um
   /// profissional dono de uma nova empresa; com um código válido
   /// (gerado ao cadastrar o aluno), a conta vira o login desse aluno.

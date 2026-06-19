@@ -194,15 +194,12 @@ class MaisScreen extends ConsumerWidget {
       ),
     );
     if (confirmou != true || !context.mounted) return;
-    // Fase 1 (demo): registra a intenção e encerra a sessão.
-    // Fase 2: chamará a Edge Function de exclusão no Supabase.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-            'Solicitação registrada. Você receberá a confirmação por email.'),
-      ),
-    );
-    await ref.read(sessaoProvider.notifier).sair();
+    try {
+      await ref.read(authRepositoryProvider).excluirConta();
+      ref.read(sessaoProvider.notifier).limparCache();
+    } catch (_) {
+      // Sessão já encerrada pelo delete em auth.users — ignora o erro.
+    }
     if (context.mounted) context.go('/login');
   }
 }

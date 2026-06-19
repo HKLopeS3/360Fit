@@ -28,6 +28,9 @@ class MockAuthRepository implements AuthRepository {
   Future<void> recuperarSenha(String email) => _simulaRede(null);
 
   @override
+  Future<void> excluirConta() => _simulaRede(null);
+
+  @override
   Future<bool> validarCodigoConvite(String codigo) => _simulaRede(
         _db.alunos.any((a) => a.codigoConvite == codigo),
       );
