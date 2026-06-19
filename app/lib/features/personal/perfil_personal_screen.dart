@@ -268,6 +268,9 @@ class _PerfilPersonalScreenState extends ConsumerState<PerfilPersonalScreen> {
 
 // ─────────────────────────────────────────────── Ajuste de capa (pan/zoom)
 
+/// Altura do banner de capa (px lógicos).
+const _kBannerH = 140.0;
+
 class _DialogAjusteCapa extends StatefulWidget {
   const _DialogAjusteCapa({required this.bytes});
 
@@ -288,8 +291,32 @@ class _DialogAjusteCapaState extends State<_DialogAjusteCapa> {
   final _boundaryKey = GlobalKey();
   bool _capturando = false;
 
+  // Transformação atual: escala e deslocamento do centro do container.
+  double _scale = 1.0;
+  Offset _offset = Offset.zero;
+
+  // Estado salvo no início do gesto.
+  double _scaleBase = 1.0;
+  Offset _offsetBase = Offset.zero;
+  Offset _focalBase = Offset.zero;
+
+  void _onScaleStart(ScaleStartDetails d) {
+    _scaleBase = _scale;
+    _offsetBase = _offset;
+    _focalBase = d.focalPoint;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails d) {
+    setState(() {
+      _scale = (_scaleBase * d.scale).clamp(0.2, 12.0);
+      _offset = _offsetBase + (d.focalPoint - _focalBase);
+    });
+  }
+
   Future<void> _confirmar() async {
     setState(() => _capturando = true);
+    // Aguarda um frame para garantir que o RepaintBoundary foi pintado.
+    await Future.microtask(() {});
     final boundary = _boundaryKey.currentContext!.findRenderObject()
         as RenderRepaintBoundary;
     final img = await boundary.toImage(pixelRatio: 2.0);
@@ -300,53 +327,152 @@ class _DialogAjusteCapaState extends State<_DialogAjusteCapa> {
 
   @override
   Widget build(BuildContext context) {
+    // Área de trabalho: maior que o banner para dar espaço de manobra.
+    const workH = _kBannerH * 2.8;
+    // Offset vertical do banner dentro da área de trabalho.
+    const bannerTop = (workH - _kBannerH) / 2;
+
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // ── Cabeçalho ──────────────────────────────────────────────────
           const Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+            padding: EdgeInsets.fromLTRB(20, 20, 20, 4),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text(
-                'Ajustar capa',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-              ),
+              child: Text('Ajustar capa',
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.w700)),
             ),
           ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'Arraste e use o pinça para encaixar a foto no banner.',
+              'Arraste para reposicionar. Pinça (ou scroll) para zoom.',
               style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
             ),
           ),
           const SizedBox(height: 12),
-          // Viewport com proporção de banner (aprox. 16:4)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: RepaintBoundary(
-                key: _boundaryKey,
-                child: SizedBox(
-                  height: 150,
-                  width: double.infinity,
-                  child: InteractiveViewer(
-                    minScale: 0.5,
-                    maxScale: 8.0,
-                    boundaryMargin: const EdgeInsets.all(double.infinity),
-                    child: Image.memory(widget.bytes, fit: BoxFit.cover),
-                  ),
+
+          // ── Área de trabalho ──────────────────────────────────────────
+          ClipRect(
+            child: GestureDetector(
+              onScaleStart: _onScaleStart,
+              onScaleUpdate: _onScaleUpdate,
+              child: Container(
+                height: workH,
+                color: const Color(0xFF111111),
+                child: Stack(
+                  children: [
+                    // Imagem transformada (pan + zoom livre)
+                    Positioned.fill(
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..translate(_offset.dx, _offset.dy)
+                          ..scale(_scale),
+                        child: Image.memory(
+                          widget.bytes,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                        ),
+                      ),
+                    ),
+
+                    // Overlay escuro fora do frame do banner
+                    IgnorePointer(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: Container(color: Colors.black54),
+                          ),
+                          SizedBox(height: _kBannerH), // janela transparente
+                          Expanded(
+                            child: Container(color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Borda branca ao redor do frame do banner
+                    IgnorePointer(
+                      child: Positioned(
+                        top: bannerTop,
+                        left: 0,
+                        right: 0,
+                        height: _kBannerH,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: Colors.white, width: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Hint centralizado na janela
+                    IgnorePointer(
+                      child: Positioned(
+                        top: bannerTop,
+                        left: 0,
+                        right: 0,
+                        height: _kBannerH,
+                        child: const Center(
+                          child: Text(
+                            'Arraste a foto para posicionar',
+                            style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+
+          // ── RepaintBoundary oculta que captura só o frame ─────────────
+          // Renderiza a mesma imagem + mesma transform em tamanho de banner.
+          SizedBox(
+            height: 0,
+            child: OverflowBox(
+              alignment: Alignment.topLeft,
+              maxHeight: _kBannerH,
+              maxWidth: double.infinity,
+              child: RepaintBoundary(
+                key: _boundaryKey,
+                child: LayoutBuilder(builder: (ctx, constraints) {
+                  final w = constraints.maxWidth;
+                  return SizedBox(
+                    width: w,
+                    height: _kBannerH,
+                    child: ClipRect(
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.identity()
+                          ..translate(_offset.dx, _offset.dy)
+                          ..scale(_scale),
+                        child: Image.memory(
+                          widget.bytes,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ),
+
+          // ── Ações ──────────────────────────────────────────────────────
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
