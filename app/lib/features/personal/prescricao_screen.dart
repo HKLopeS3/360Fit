@@ -115,14 +115,24 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
       ),
     );
     if (confirmar != true) return;
+    // Guarda referências antes do await (widget pode reconstruir)
     final alunoId = _treino!.alunoId;
     final treinoId = _treino!.id;
-    if (!treinoId.startsWith('t-novo-')) {
-      await ref.read(treinoRepositoryProvider).excluir(treinoId);
-    }
-    ref.invalidate(treinosDoAlunoProvider(alunoId));
-    ref.invalidate(treinoDoDiaProvider);
+    // Oculta seção de exercícios imediatamente para feedback visual
     setState(() => _treino = null);
+    try {
+      if (!treinoId.startsWith('t-novo-')) {
+        await ref.read(treinoRepositoryProvider).excluir(treinoId);
+      }
+      if (!mounted) return;
+      ref.invalidate(treinosDoAlunoProvider(alunoId));
+      ref.invalidate(treinoDoDiaProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erro ao excluir treino. Tente novamente.')),
+      );
+    }
   }
 
   Future<void> _salvar() async {

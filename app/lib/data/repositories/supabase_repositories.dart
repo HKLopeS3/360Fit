@@ -418,9 +418,10 @@ class SupabaseTreinoRepository implements TreinoRepository {
   }
 
   @override
-  @override
   Future<void> excluir(String treinoId) async {
-    await _db.from('itens_treino').delete().eq('treino_id', treinoId);
+    // treino_itens tem ON DELETE CASCADE, mas deletamos explicitamente
+    // para garantir (RLS precisa do treino ainda existir para o check).
+    await _db.from('treino_itens').delete().eq('treino_id', treinoId);
     await _db.from('treinos').delete().eq('id', treinoId);
   }
 
