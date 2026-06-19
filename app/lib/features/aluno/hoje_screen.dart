@@ -114,6 +114,7 @@ class _TreinoDoDia extends ConsumerWidget {
         .firstOrNull;
 
     final personalAsync = ref.watch(personalDoAlunoProvider);
+    final avaliacoesAsync = ref.watch(avaliacoesProvider(alunoLogadoId));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -122,6 +123,8 @@ class _TreinoDoDia extends ConsumerWidget {
             ? _BannerPersonal(info: info)
             : const SizedBox.shrink()).valueOrNull ??
             const SizedBox.shrink(),
+        // ── Métricas rápidas do aluno ──
+        _DashboardAluno(avaliacoesAsync: avaliacoesAsync),
         if (programaVigente != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
@@ -303,6 +306,106 @@ class _CardAgua extends ConsumerWidget {
               tooltip: 'Bebi um copo!',
               onPressed: () => ref.read(aguaProvider.notifier).ajustar(1),
               icon: const Icon(Icons.add),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Dashboard rápido do aluno ──────────────────────────────────────────────
+
+class _DashboardAluno extends StatelessWidget {
+  const _DashboardAluno({required this.avaliacoesAsync});
+
+  final AsyncValue<List<AvaliacaoFisica>> avaliacoesAsync;
+
+  @override
+  Widget build(BuildContext context) {
+    final ultima = avaliacoesAsync.valueOrNull
+        ?.where((a) => a.pesoKg > 0)
+        .lastOrNull;
+    if (ultima == null) return const SizedBox.shrink();
+
+    final brand = context.brand;
+
+    Color corGordura(double pct) {
+      if (pct <= 0) return kTextSecondary;
+      if (pct < 20) return const Color(0xFF22C55E);
+      if (pct < 28) return const Color(0xFFF59E0B);
+      return const Color(0xFFEF4444);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          _MiniMetrica(
+            icone: Icons.monitor_weight_outlined,
+            valor: '${ultima.pesoKg.toStringAsFixed(1)} kg',
+            rotulo: 'Peso atual',
+            cor: brand.primaria,
+          ),
+          const SizedBox(width: 8),
+          if (ultima.gorduraPct > 0)
+            _MiniMetrica(
+              icone: Icons.water_drop_outlined,
+              valor: '${ultima.gorduraPct.toStringAsFixed(1)}%',
+              rotulo: 'Gordura',
+              cor: corGordura(ultima.gorduraPct),
+            ),
+          if (ultima.gorduraPct > 0) const SizedBox(width: 8),
+          _MiniMetrica(
+            icone: Icons.fitness_center_outlined,
+            valor: '${ultima.massaMagraKg.toStringAsFixed(1)} kg',
+            rotulo: 'Massa magra',
+            cor: const Color(0xFF06B6D4),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniMetrica extends StatelessWidget {
+  const _MiniMetrica({
+    required this.icone,
+    required this.valor,
+    required this.rotulo,
+    required this.cor,
+  });
+
+  final IconData icone;
+  final String valor;
+  final String rotulo;
+  final Color cor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: AppCard(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+        child: Row(
+          children: [
+            Icon(icone, size: 16, color: cor),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(valor,
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: cor)),
+                  Text(rotulo,
+                      style: const TextStyle(
+                          fontSize: 10, color: kTextSecondary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                ],
+              ),
             ),
           ],
         ),

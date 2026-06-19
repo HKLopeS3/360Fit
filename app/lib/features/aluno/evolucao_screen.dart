@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
+import '../../data/repositories/repositories.dart';
 import '../../shared/widgets.dart';
 import 'conquistas_screen.dart';
 import 'fotos_evolucao_screen.dart';
 import 'historico_screen.dart';
+import 'minha_avaliacao_screen.dart';
 
 class EvolucaoScreen extends ConsumerWidget {
   const EvolucaoScreen({super.key});
@@ -98,12 +100,22 @@ class EvolucaoScreen extends ConsumerWidget {
           const SectionTitle('Avaliações físicas'),
           AsyncView(
             value: avaliacoesAsync,
-            builder: (avaliacoes) => Column(
-              children: [
-                for (final a in avaliacoes.reversed)
-                  _AvaliacaoCard(avaliacao: a),
-              ],
-            ),
+            builder: (avaliacoes) {
+              final nomeAluno = ref.read(sessaoProvider)?.nome ?? 'Aluno';
+              final nomePersonal =
+                  ref.read(personalDoAlunoProvider).valueOrNull?.nome ??
+                      'Personal';
+              return Column(
+                children: [
+                  for (final a in avaliacoes.reversed)
+                    _AvaliacaoCard(
+                      avaliacao: a,
+                      nomeAluno: nomeAluno,
+                      nomePersonal: nomePersonal,
+                    ),
+                ],
+              );
+            },
           ),
         ],
         ),
@@ -199,49 +211,136 @@ class _LinhaChart extends StatelessWidget {
 }
 
 class _AvaliacaoCard extends StatelessWidget {
-  const _AvaliacaoCard({required this.avaliacao});
+  const _AvaliacaoCard({
+    required this.avaliacao,
+    required this.nomeAluno,
+    required this.nomePersonal,
+  });
 
   final AvaliacaoFisica avaliacao;
+  final String nomeAluno;
+  final String nomePersonal;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget metrica(String rotulo, String valor) => Expanded(
-          child: Column(
-            children: [
-              Text(valor,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800)),
-              Text(rotulo, style: theme.textTheme.bodySmall),
-            ],
+    final brand = context.brand;
+
+    Widget metrica(String rotulo, String valor, Color cor) => Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: cor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              children: [
+                Text(valor,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800, color: cor)),
+                const SizedBox(height: 2),
+                Text(rotulo,
+                    style: const TextStyle(
+                        fontSize: 11, color: kTextSecondary)),
+              ],
+            ),
           ),
         );
 
-    return Card(
-      color: Colors.white,
+    return AppCard(
       margin: const EdgeInsets.only(bottom: 10),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Avaliação de ${fmtDiaMes.format(avaliacao.data)}/${avaliacao.data.year}',
-              style: theme.textTheme.bodySmall
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: 12),
-            Row(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.assignment_outlined, size: 15,
+                  color: kTextSecondary),
+              const SizedBox(width: 6),
+              Text(
+                'Avaliação de ${fmtDiaMes.format(avaliacao.data)}/${avaliacao.data.year}',
+                style: const TextStyle(
+                    fontSize: 12, color: kTextSecondary,
+                    fontWeight: FontWeight.w600),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => MinhaAvaliacaoScreen(
+                      avaliacao: avaliacao,
+                      nomeAluno: nomeAluno,
+                      nomePersonal: nomePersonal,
+                    ),
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: brand.primaria,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('Ver completo', style: TextStyle(fontSize: 12)),
+                    SizedBox(width: 2),
+                    Icon(Icons.chevron_right, size: 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              metrica('Peso',
+                  '${avaliacao.pesoKg.toStringAsFixed(1)} kg',
+                  brand.primaria),
+              const SizedBox(width: 8),
+              metrica(
+                  'Gordura',
+                  '${avaliacao.gorduraPct.toStringAsFixed(1)}%',
+                  avaliacao.gorduraPct < 20
+                      ? const Color(0xFF22C55E)
+                      : avaliacao.gorduraPct < 28
+                          ? const Color(0xFFF59E0B)
+                          : const Color(0xFFEF4444)),
+              const SizedBox(width: 8),
+              metrica(
+                  'Massa magra',
+                  '${avaliacao.massaMagraKg.toStringAsFixed(1)} kg',
+                  const Color(0xFF06B6D4)),
+            ],
+          ),
+          if (avaliacao.medidas.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Divider(height: 1),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
               children: [
-                metrica('Peso', '${avaliacao.pesoKg.toStringAsFixed(1)} kg'),
-                metrica('Gordura',
-                    '${avaliacao.gorduraPct.toStringAsFixed(1)}%'),
-                metrica('Massa magra',
-                    '${avaliacao.massaMagraKg.toStringAsFixed(1)} kg'),
+                for (final e in avaliacao.medidas.entries.take(6))
+                  Text(
+                    '${e.key}: ${e.value.toStringAsFixed(0)}cm',
+                    style: const TextStyle(
+                        fontSize: 11, color: kTextSecondary),
+                  ),
+                if (avaliacao.medidas.length > 6)
+                  Text(
+                    '+ ${avaliacao.medidas.length - 6} medidas',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: brand.primaria,
+                        fontWeight: FontWeight.w600),
+                  ),
               ],
             ),
           ],
-        ),
+        ],
       ),
     );
   }
