@@ -75,59 +75,101 @@ class DashboardScreen extends ConsumerWidget {
       body: AsyncView(
         value: alunosAsync,
         builder: (alunos) {
-          return ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              // ── Primeiros Passos ─────────────────────────────────────────
-              _PrimeirosPassos(
-                temAlunos: alunos.isNotEmpty,
-                temCref: sessao?.cref != null && (sessao!.cref!.isNotEmpty),
-                onPerfil: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const PerfilPersonalScreen()),
-                ),
-                onNovoAluno: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const FormAlunoScreen()),
-                ),
-                onPrescricao: () => context.go('/personal/prescricao'),
-                onFeed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const FeedScreen(comoPersonal: true)),
-                ),
-              ),
-              const SizedBox(height: 4),
-
-              // ── Banner promocional ────────────────────────────────────────
-              _BannerPerfil(onTap: () => context.go('/personal/mais')),
-              const SizedBox(height: 4),
-
-              // ── Feedback dos treinos ──────────────────────────────────────
-              _FeedbackTreinos(alunos: alunos),
-              const SizedBox(height: 4),
-
-              // ── Prescrições resumo ────────────────────────────────────────
-              _CardPrescricoes(totalAlunos: alunos.length),
-              const SizedBox(height: 4),
-
-              // ── Alertas ───────────────────────────────────────────────────
-              Consumer(builder: (context, ref, _) {
-                final alertasAsync = ref.watch(alertasProvider);
-                return alertasAsync.when(
-                  loading: () => const SizedBox.shrink(),
-                  error: (_, __) => const SizedBox.shrink(),
-                  data: (alertas) {
-                    if (alertas.isEmpty) return const SizedBox.shrink();
-                    return _SecaoAlertas(alertas: alertas);
-                  },
-                );
-              }),
-
-              // ── Alunos em risco ───────────────────────────────────────────
-              _AlunosEmRisco(alunos: alunos),
-
-              const SizedBox(height: 24),
-            ],
+          final primeirosPassos = _PrimeirosPassos(
+            temAlunos: alunos.isNotEmpty,
+            temCref: sessao?.cref != null && (sessao!.cref!.isNotEmpty),
+            onPerfil: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const PerfilPersonalScreen()),
+            ),
+            onNovoAluno: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FormAlunoScreen()),
+            ),
+            onPrescricao: () => context.go('/personal/prescricao'),
+            onFeed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (_) => const FeedScreen(comoPersonal: true)),
+            ),
           );
+          final banner = _BannerPerfil(onTap: () => context.go('/personal/mais'));
+          final feedback = _FeedbackTreinos(alunos: alunos);
+          final prescricoes = _CardPrescricoes(totalAlunos: alunos.length);
+          final alertas = Consumer(builder: (context, ref, _) {
+            final alertasAsync = ref.watch(alertasProvider);
+            return alertasAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (alertas) {
+                if (alertas.isEmpty) return const SizedBox.shrink();
+                return _SecaoAlertas(alertas: alertas);
+              },
+            );
+          });
+          final emRisco = _AlunosEmRisco(alunos: alunos);
+
+          return LayoutBuilder(builder: (context, constraints) {
+            if (constraints.maxWidth >= 900) {
+              // ── Layout desktop: duas colunas ──────────────────────────────
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(32, 24, 32, 32),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 1200),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Coluna principal (60%)
+                        Expanded(
+                          flex: 6,
+                          child: Column(
+                            children: [
+                              primeirosPassos,
+                              const SizedBox(height: 16),
+                              feedback,
+                              const SizedBox(height: 16),
+                              emRisco,
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        // Coluna lateral (40%)
+                        Expanded(
+                          flex: 4,
+                          child: Column(
+                            children: [
+                              banner,
+                              const SizedBox(height: 16),
+                              prescricoes,
+                              const SizedBox(height: 16),
+                              alertas,
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            // ── Layout mobile: coluna única ───────────────────────────────
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                primeirosPassos,
+                const SizedBox(height: 4),
+                banner,
+                const SizedBox(height: 4),
+                feedback,
+                const SizedBox(height: 4),
+                prescricoes,
+                const SizedBox(height: 4),
+                alertas,
+                emRisco,
+                const SizedBox(height: 24),
+              ],
+            );
+          });
         },
       ),
     );
