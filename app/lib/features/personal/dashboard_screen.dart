@@ -436,102 +436,125 @@ class _CardPasso extends StatelessWidget {
 
 // ─────────────────────────────────────────────── Banner Perfil
 
-class _BannerPerfil extends StatelessWidget {
+class _BannerPerfil extends ConsumerWidget {
   const _BannerPerfil({required this.onTap});
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final capaUrl = ref.watch(sessaoProvider)?.capaUrl;
+
+    DecorationImage? imagemFundo;
+    if (capaUrl != null && capaUrl.isNotEmpty && capaUrl != 'mock://capa') {
+      imagemFundo = DecorationImage(
+        image: NetworkImage(capaUrl),
+        fit: BoxFit.cover,
+        colorFilter: ColorFilter.mode(
+          Colors.black.withValues(alpha: 0.45),
+          BlendMode.darken,
+        ),
+      );
+    }
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
       height: 130,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A2E22), Color(0xFF0D3B2E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        image: imagemFundo,
+        gradient: imagemFundo == null
+            ? const LinearGradient(
+                colors: [Color(0xFF1A2E22), Color(0xFF0D3B2E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: imagemFundo != null ? const Color(0xFF1A2E22) : null,
       ),
-      child: Stack(
-        children: [
-          // Padrão decorativo
-          Positioned(
-            right: 0,
-            top: 0,
-            bottom: 0,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.horizontal(
-                  right: Radius.circular(18)),
-              child: Opacity(
-                opacity: 0.12,
-                child: Container(
-                  width: 120,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [Colors.transparent, Color(0xFF00BFA5)],
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Stack(
+          children: [
+            if (imagemFundo == null) ...[
+              // Padrão decorativo (só sem capa)
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: Opacity(
+                  opacity: 0.12,
+                  child: Container(
+                    width: 120,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.transparent, Color(0xFF00BFA5)],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            right: 16,
-            top: 16,
-            child: Opacity(
-              opacity: 0.2,
-              child: const Icon(Icons.fitness_center,
-                  size: 60, color: Colors.white),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Divulgue seu trabalho\ne conquiste mais alunos',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    height: 1.3,
-                  ),
+              Positioned(
+                right: 16,
+                top: 16,
+                child: Opacity(
+                  opacity: 0.2,
+                  child: const Icon(Icons.fitness_center,
+                      size: 60, color: Colors.white),
                 ),
-                GestureDetector(
-                  onTap: onTap,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                          color: const Color(0xFF00BFA5), width: 1.5),
-                      borderRadius: BorderRadius.circular(20),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.all(18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    capaUrl != null && capaUrl.isNotEmpty
+                        ? 'Sua capa está ativa\nvisível para seus alunos'
+                        : 'Divulgue seu trabalho\ne conquiste mais alunos',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                      shadows: [Shadow(blurRadius: 4, color: Colors.black54)],
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text(
-                          'Acessar meu perfil',
-                          style: TextStyle(
-                            color: Color(0xFF00BFA5),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                  ),
+                  GestureDetector(
+                    onTap: onTap,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                            color: const Color(0xFF00BFA5), width: 1.5),
+                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.black.withValues(alpha: 0.2),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Text(
+                            'Acessar meu perfil',
+                            style: TextStyle(
+                              color: Color(0xFF00BFA5),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        SizedBox(width: 4),
-                        Icon(Icons.play_arrow_rounded,
-                            color: Color(0xFF00BFA5), size: 16),
-                      ],
+                          SizedBox(width: 4),
+                          Icon(Icons.play_arrow_rounded,
+                              color: Color(0xFF00BFA5), size: 16),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
