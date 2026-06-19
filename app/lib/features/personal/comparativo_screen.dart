@@ -164,7 +164,6 @@ class _SeletorAvaliacao extends StatelessWidget {
       decoration: InputDecoration(
         labelText: rotulo,
         filled: true,
-        fillColor: Colors.white,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

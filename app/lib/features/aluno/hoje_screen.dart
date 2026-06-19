@@ -69,7 +69,7 @@ class _DiaDeDescanso extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.self_improvement, size: 72, color: Colors.teal),
+          Icon(Icons.self_improvement, size: 72, color: context.brand.primaria),
           const SizedBox(height: 12),
           Text('Hoje é dia de descanso!',
               style: Theme.of(context).textTheme.titleLarge),
@@ -277,7 +277,7 @@ class _CardAgua extends ConsumerWidget {
                     child: LinearProgressIndicator(
                       value: (copos / meta).clamp(0.0, 1.0),
                       minHeight: 6,
-                      color: Colors.lightBlue,
+                      color: context.brand.primaria,
                       backgroundColor:
                           theme.colorScheme.surfaceContainerHighest,
                     ),

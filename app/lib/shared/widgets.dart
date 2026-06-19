@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../app/theme/brand_theme.dart';
 import '../core/models/models.dart';
 import '../data/providers.dart';
 
@@ -69,29 +70,147 @@ class AsyncView<T> extends StatelessWidget {
   }
 }
 
+/// Título de seção com barra colorida lateral — padrão do design system.
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.texto, {super.key, this.trailing});
+  const SectionTitle(this.texto, {super.key, this.trailing, this.topPadding = 20});
 
   final String texto;
   final Widget? trailing;
+  final double topPadding;
 
   @override
   Widget build(BuildContext context) {
+    final cor = context.brand.primaria;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 20, 4, 10),
+      padding: EdgeInsets.fromLTRB(0, topPadding, 0, 10),
       child: Row(
         children: [
+          Container(
+            width: 4,
+            height: 18,
+            decoration: BoxDecoration(
+              color: cor,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               texto,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary,
+              ),
             ),
           ),
           if (trailing != null) trailing!,
         ],
+      ),
+    );
+  }
+}
+
+/// Card branco com sombra sutil — padrão do design system.
+/// Substitui `Card(color: Colors.white)` em toda a app.
+class AppCard extends StatelessWidget {
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+    this.margin = EdgeInsets.zero,
+    this.radius = 16,
+    this.onTap,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry margin;
+  final double radius;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        color: kBgCard,
+        borderRadius: BorderRadius.circular(radius),
+        boxShadow: kShadowCard,
+      ),
+      child: Padding(padding: padding, child: child),
+    );
+    if (onTap == null) return content;
+    return GestureDetector(
+      onTap: onTap,
+      child: content,
+    );
+  }
+}
+
+/// Estado vazio padronizado.
+class AppEmptyState extends StatelessWidget {
+  const AppEmptyState({
+    super.key,
+    required this.icone,
+    required this.titulo,
+    this.descricao,
+    this.acao,
+    this.rotuloAcao,
+  });
+
+  final IconData icone;
+  final String titulo;
+  final String? descricao;
+  final VoidCallback? acao;
+  final String? rotuloAcao;
+
+  @override
+  Widget build(BuildContext context) {
+    final cor = context.brand.primaria;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: cor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icone, size: 36, color: cor),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              titulo,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: kTextPrimary,
+              ),
+            ),
+            if (descricao != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                descricao!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: kTextSecondary,
+                  height: 1.4,
+                ),
+              ),
+            ],
+            if (acao != null) ...[
+              const SizedBox(height: 20),
+              FilledButton(onPressed: acao, child: Text(rotuloAcao ?? 'Ok')),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -140,46 +259,40 @@ class MetricCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                if (icone != null) ...[
-                  Icon(icone, size: 18, color: corIcone ?? theme.colorScheme.primary),
-                  const SizedBox(width: 6),
-                ],
-                Expanded(
-                  child: Text(
-                    titulo,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (icone != null) ...[
+                Icon(icone, size: 18, color: corIcone ?? theme.colorScheme.primary),
+                const SizedBox(width: 6),
               ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              valor,
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            if (subtitulo != null) ...[
-              const SizedBox(height: 2),
-              Text(
-                subtitulo!,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+              Expanded(
+                child: Text(
+                  titulo,
+                  style: const TextStyle(fontSize: 12, color: kTextSecondary),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            valor,
+            style: theme.textTheme.headlineSmall
+                ?.copyWith(fontWeight: FontWeight.w800, color: kTextPrimary),
+          ),
+          if (subtitulo != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitulo!,
+              style: const TextStyle(fontSize: 12, color: kTextSecondary),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -205,9 +318,13 @@ class TreinoResumoCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final exercicios = ref.read(exercicioRepositoryProvider);
-    return Card(
-      color: Colors.white,
+    return Container(
       margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: kBgCard,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: kShadowCard,
+      ),
       child: ExpansionTile(
         shape: const Border(),
         title: Text('${treino.nome} — ${treino.foco}',

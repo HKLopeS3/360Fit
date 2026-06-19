@@ -44,7 +44,6 @@ class _AlunosScreenState extends ConsumerState<AlunosScreen> {
                 hintText: 'Buscar aluno…',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
-                fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,

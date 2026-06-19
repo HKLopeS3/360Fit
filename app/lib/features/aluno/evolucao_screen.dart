@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/theme/brand_theme.dart';
 import '../../core/models/models.dart';
 import '../../data/providers.dart';
 import '../../shared/widgets.dart';
@@ -88,7 +89,7 @@ class EvolucaoScreen extends ConsumerWidget {
                         FlSpot(i.toDouble(), c.cargaKg),
                     ],
                     rotulos: [for (final c in cargas) fmtDiaMes.format(c.data)],
-                    cor: Colors.deepOrange,
+                    cor: context.brand.primaria,
                   ),
                 ),
               ),

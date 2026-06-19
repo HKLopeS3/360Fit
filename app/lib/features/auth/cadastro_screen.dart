@@ -157,7 +157,6 @@ class _CadastroScreenState extends ConsumerState<CadastroScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Nome completo',
                             prefixIcon: Icon(Icons.person_outline),
-                            border: OutlineInputBorder(),
                           ),
                           validator: (v) => (v == null || v.trim().length < 3)
                               ? 'Informe seu nome'
@@ -171,7 +170,6 @@ class _CadastroScreenState extends ConsumerState<CadastroScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Email',
                             prefixIcon: Icon(Icons.alternate_email),
-                            border: OutlineInputBorder(),
                           ),
                           validator: (v) {
                             final email = v?.trim() ?? '';
@@ -191,7 +189,6 @@ class _CadastroScreenState extends ConsumerState<CadastroScreen> {
                           decoration: InputDecoration(
                             labelText: 'Senha',
                             prefixIcon: const Icon(Icons.lock_outline),
-                            border: const OutlineInputBorder(),
                             suffixIcon: IconButton(
                               tooltip: _ocultarSenha
                                   ? 'Mostrar senha'
@@ -214,7 +211,6 @@ class _CadastroScreenState extends ConsumerState<CadastroScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Confirmar senha',
                             prefixIcon: Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(),
                           ),
                           validator: (v) => v != _senha.text
                               ? 'As senhas não coincidem'
@@ -227,7 +223,6 @@ class _CadastroScreenState extends ConsumerState<CadastroScreen> {
                           decoration: const InputDecoration(
                             labelText: 'Código de convite (se você é aluno)',
                             prefixIcon: Icon(Icons.confirmation_number_outlined),
-                            border: OutlineInputBorder(),
                             helperText: 'Deixe em branco se você é um '
                                 'profissional criando sua empresa.',
                             helperMaxLines: 2,

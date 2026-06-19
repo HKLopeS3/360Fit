@@ -131,9 +131,7 @@ class _FormAlunoScreenState extends ConsumerState<FormAlunoScreen> {
     InputDecoration dec(String rotulo, {String? sufixo}) => InputDecoration(
           labelText: rotulo,
           suffixText: sufixo,
-          border: const OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.white,
         );
 
     return Scaffold(

@@ -164,7 +164,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
           keyboardType: TextInputType.emailAddress,
           decoration: const InputDecoration(
             labelText: 'Email cadastrado',
-            border: OutlineInputBorder(),
           ),
         ),
         actions: [
@@ -210,7 +209,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             decoration: const InputDecoration(
               labelText: 'Email',
               prefixIcon: Icon(Icons.alternate_email),
-              border: OutlineInputBorder(),
             ),
             validator: (v) {
               final email = v?.trim() ?? '';
@@ -230,7 +228,6 @@ class _LoginFormState extends ConsumerState<_LoginForm> {
             decoration: InputDecoration(
               labelText: 'Senha',
               prefixIcon: const Icon(Icons.lock_outline),
-              border: const OutlineInputBorder(),
               suffixIcon: IconButton(
                 tooltip: _ocultarSenha ? 'Mostrar senha' : 'Ocultar senha',
                 icon: Icon(_ocultarSenha

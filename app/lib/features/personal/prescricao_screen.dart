@@ -165,7 +165,6 @@ class _PrescricaoScreenState extends ConsumerState<PrescricaoScreen> {
               decoration: InputDecoration(
                 labelText: 'Aluno',
                 filled: true,
-                fillColor: Colors.white,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
@@ -369,7 +368,6 @@ class _SeletorExercicioState extends ConsumerState<_SeletorExercicio> {
           autofocus: true,
           decoration: const InputDecoration(
             labelText: 'URL do vídeo (YouTube ou link direto)',
-            border: OutlineInputBorder(),
           ),
         ),
         actions: [

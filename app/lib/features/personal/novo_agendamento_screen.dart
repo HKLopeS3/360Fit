@@ -86,9 +86,7 @@ class _NovoAgendamentoScreenState
 
     InputDecoration dec(String rotulo) => InputDecoration(
           labelText: rotulo,
-          border: const OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.white,
         );
 
     return Scaffold(

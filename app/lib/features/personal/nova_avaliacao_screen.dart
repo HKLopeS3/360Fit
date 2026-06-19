@@ -238,9 +238,7 @@ class _NovaAvaliacaoScreenState extends ConsumerState<NovaAvaliacaoScreen> {
     InputDecoration dec(String rotulo, {String? sufixo}) => InputDecoration(
           labelText: rotulo,
           suffixText: sufixo,
-          border: const OutlineInputBorder(),
           filled: true,
-          fillColor: Colors.white,
         );
 
     final aluno = ref.watch(alunoProvider(widget.alunoId)).valueOrNull;
