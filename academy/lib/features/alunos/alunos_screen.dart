@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/mock_data.dart' as mock;
@@ -186,13 +187,7 @@ class _AlunosScreenState extends State<AlunosScreen> {
   }
 
   void _abrirDetalhe(BuildContext context, AlunoAcademia aluno) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => _DetalheAluno(aluno),
-    );
+    context.go('/alunos/${aluno.id}');
   }
 
   void _mostrarFormAluno(BuildContext context) {
@@ -575,159 +570,6 @@ class _Paginacao extends StatelessWidget {
   }
 }
 
-// ── Detalhe do aluno (bottom sheet) ──────────────────────────────────────────
-class _DetalheAluno extends StatelessWidget {
-  const _DetalheAluno(this.aluno);
-  final AlunoAcademia aluno;
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = DateFormat('dd/MM/yyyy');
-    final sit = aluno.situacao;
-    final mens =
-        mock.mensalidades.where((m) => m.alunoId == aluno.id).toList();
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.65,
-      maxChildSize: 0.95,
-      minChildSize: 0.4,
-      expand: false,
-      builder: (_, ctrl) => ListView(
-        controller: ctrl,
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        children: [
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                  color: kBorder, borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          Row(
-            children: [
-              AvatarIniciais(aluno.iniciais, radius: 30, cor: sit.cor),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(aluno.nome,
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: kTxt1)),
-                    const SizedBox(height: 4),
-                    BadgeSituacao(label: sit.label, cor: sit.cor),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          _InfoRow(Icons.email_outlined, aluno.email),
-          _InfoRow(Icons.phone_outlined, aluno.telefone),
-          _InfoRow(Icons.card_membership_outlined, 'Plano ${aluno.plano.label}'),
-          _InfoRow(Icons.calendar_today_outlined,
-              'Vence em ${fmt.format(aluno.vencimento)}'),
-          if (aluno.ultimoCheckin != null)
-            _InfoRow(Icons.login_outlined,
-                'Último acesso: ${fmt.format(aluno.ultimoCheckin!)}'),
-          const TituloSecao('Histórico de mensalidades'),
-          for (final m in mens) _LinhaMensalidade(m),
-          if (mens.isEmpty)
-            const Text('Nenhuma mensalidade registrada.',
-                style: TextStyle(color: kTxt2, fontSize: 13)),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  label: const Text('Fechar'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Mensalidade gerada!')),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Gerar mensalidade'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow(this.icon, this.texto);
-  final IconData icon;
-  final String texto;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: kTxt2),
-          const SizedBox(width: 8),
-          Text(texto, style: const TextStyle(fontSize: 13, color: kTxt1)),
-        ],
-      ),
-    );
-  }
-}
-
-class _LinhaMensalidade extends StatelessWidget {
-  const _LinhaMensalidade(this.m);
-  final MensalidadeAcademia m;
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = DateFormat('dd/MM/yy');
-    final cor = m.paga ? kSucesso : kErro;
-    final fmtM = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: cor.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(kRadiusSm),
-        border: Border.all(color: cor.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Icon(m.paga ? Icons.check_circle_outline : Icons.schedule,
-              size: 16, color: cor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              m.paga
-                  ? 'Pago em ${fmt.format(m.pagoEm!)}'
-                  : 'Vence ${fmt.format(m.vencimento)}',
-              style: TextStyle(fontSize: 12, color: cor),
-            ),
-          ),
-          Text(fmtM.format(m.valor),
-              style: TextStyle(
-                  fontSize: 13, fontWeight: FontWeight.w700, color: cor)),
-        ],
-      ),
-    );
-  }
-}
 
 // ── Chip de filtro genérico ───────────────────────────────────────────────────
 class _FiltroChip<T> extends StatelessWidget {

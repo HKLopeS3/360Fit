@@ -53,6 +53,16 @@ extension SituacaoX on SituacaoFinanceira {
 }
 
 // ── Aluno da academia ─────────────────────────────────────────────────────────
+enum Sexo { masculino, feminino, outro }
+
+extension SexoX on Sexo {
+  String get label => switch (this) {
+        Sexo.masculino => 'Masculino',
+        Sexo.feminino  => 'Feminino',
+        Sexo.outro     => 'Outro',
+      };
+}
+
 class AlunoAcademia {
   const AlunoAcademia({
     required this.id,
@@ -64,6 +74,16 @@ class AlunoAcademia {
     required this.ativo,
     this.fotoUrl,
     this.ultimoCheckin,
+    this.cpf,
+    this.dataNascimento,
+    this.sexo,
+    this.objetivo,
+    this.cep,
+    this.logradouro,
+    this.numero,
+    this.bairro,
+    this.cidade,
+    this.professor,
   });
 
   final String id;
@@ -75,6 +95,27 @@ class AlunoAcademia {
   final bool ativo;
   final String? fotoUrl;
   final DateTime? ultimoCheckin;
+  final String? cpf;
+  final DateTime? dataNascimento;
+  final Sexo? sexo;
+  final String? objetivo;
+  final String? cep;
+  final String? logradouro;
+  final String? numero;
+  final String? bairro;
+  final String? cidade;
+  final String? professor;
+
+  int? get idade {
+    if (dataNascimento == null) return null;
+    final hoje = DateTime.now();
+    int anos = hoje.year - dataNascimento!.year;
+    if (hoje.month < dataNascimento!.month ||
+        (hoje.month == dataNascimento!.month && hoje.day < dataNascimento!.day)) {
+      anos--;
+    }
+    return anos;
+  }
 
   String get iniciais {
     final partes = nome.trim().split(' ');

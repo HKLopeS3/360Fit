@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'core/mock_data.dart' as mock;
 import 'core/theme.dart';
 import 'features/agenda/agenda_screen.dart';
+import 'features/alunos/aluno_detalhe_screen.dart';
 import 'features/alunos/alunos_screen.dart';
 import 'features/dashboard/dashboard_screen.dart';
 import 'features/financeiro/financeiro_screen.dart';
@@ -23,8 +24,16 @@ final _router = GoRouter(
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
-              path: '/alunos',
-              builder: (_, __) => const AlunosScreen()),
+            path: '/alunos',
+            builder: (_, __) => const AlunosScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                builder: (_, state) => AlunoDetalheScreen(
+                    alunoId: state.pathParameters['id']!),
+              ),
+            ],
+          ),
         ]),
         StatefulShellBranch(routes: [
           GoRoute(
